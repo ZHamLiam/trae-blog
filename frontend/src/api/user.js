@@ -61,5 +61,17 @@ export default {
       method: 'put',
       data
     });
+  },
+  
+  // 上传头像
+  uploadAvatar(data) {
+    return request({
+      url: '/users/avatar',
+      method: 'post',
+      data,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
   }
 };

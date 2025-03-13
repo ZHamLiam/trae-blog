@@ -60,7 +60,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             LambdaQueryWrapper<ArticleTag> articleTagWrapper = new LambdaQueryWrapper<>();
             articleTagWrapper.eq(ArticleTag::getTagId, tag.getId());
             long count = articleTagMapper.selectCount(articleTagWrapper);
-            tag.setArticleCount((int) count);
+            tag.setArticleCount((int)count);
         }
         
         return tagPage;
@@ -80,7 +80,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             LambdaQueryWrapper<ArticleTag> articleTagWrapper = new LambdaQueryWrapper<>();
             articleTagWrapper.eq(ArticleTag::getTagId, id);
             long count = articleTagMapper.selectCount(articleTagWrapper);
-            tag.setArticleCount((int) count);
+            tag.setArticleCount((int)count);
         }
         return tag;
     }
@@ -161,7 +161,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             LambdaQueryWrapper<ArticleTag> articleTagWrapper = new LambdaQueryWrapper<>();
             articleTagWrapper.eq(ArticleTag::getTagId, tag.getId());
             long count = articleTagMapper.selectCount(articleTagWrapper);
-            tag.setArticleCount((int) count);
+            tag.setArticleCount((int)count);
         }
         
         return tags;

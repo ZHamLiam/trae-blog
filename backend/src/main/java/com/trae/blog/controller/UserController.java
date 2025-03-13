@@ -6,8 +6,13 @@ import com.trae.blog.entity.User;
 import com.trae.blog.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 用户控制器
@@ -145,7 +150,7 @@ public class UserController {
      * @param passwordMap 密码信息，包含oldPassword和newPassword
      * @return 修改结果
      */
-    @PostMapping("/change-password")
+    @PutMapping("/password")
     public Result<Boolean> changePassword(@RequestBody Map<String, String> passwordMap) {
         String oldPassword = passwordMap.get("oldPassword");
         String newPassword = passwordMap.get("newPassword");
@@ -155,6 +160,58 @@ public class UserController {
             return Result.success("密码修改成功", true);
         } else {
             return Result.error("密码修改失败，可能旧密码不正确");
+        }
+    }
+    
+    /**
+     * 上传用户头像
+     *
+     * @param file 头像文件
+     * @return 头像URL
+     */
+    @PostMapping("/avatar")
+    public Result<String> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return Result.error("上传文件不能为空");
+        }
+        
+        try {
+            // 获取当前用户
+            User user = userService.getUserInfo();
+            if (user == null) {
+                return Result.error("用户未登录");
+            }
+            
+            // 调用文件上传服务
+            String originalFilename = file.getOriginalFilename();
+            String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String fileName = UUID.randomUUID().toString().replace("-", "") + suffix;
+            
+            // 按日期构建目录
+            String dateDir = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+            String uploadPath = System.getProperty("user.dir") + "/uploads/avatar/";
+            File targetDir = new File(uploadPath + dateDir);
+            if (!targetDir.exists()) {
+                targetDir.mkdirs();
+            }
+            
+            // 构建文件路径
+            File targetFile = new File(targetDir.getAbsolutePath() + File.separator + fileName);
+            
+            // 保存文件
+            file.transferTo(targetFile);
+            
+            // 构建访问URL
+            String fileUrl = "/api/uploads/avatar/" + dateDir + "/" + fileName;
+            
+            // 更新用户头像
+            user.setAvatar(fileUrl);
+            userService.updateById(user);
+            
+            return Result.success("头像上传成功", fileUrl);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("头像上传失败: " + e.getMessage());
         }
     }
 }

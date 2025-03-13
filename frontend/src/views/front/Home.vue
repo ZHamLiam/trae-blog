@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { Card, Row, Col, Pagination, Tag, Divider, message } from 'ant-design-vue';
+import BackToTop from '@/components/BackToTop.vue';
 import articleApi from '@/api/article';
 import categoryApi from '@/api/category';
 import tagApi from '@/api/tag';
@@ -36,20 +37,38 @@ const fetchData = async () => {
       page: pagination.value.current,
       size: pagination.value.pageSize
     });
-    articles.value = articlesRes.data;
-    pagination.value.total = articlesRes.total;
+    
+    if (articlesRes.code === 200) {
+      articles.value = articlesRes.data.records || [];
+      pagination.value.total = articlesRes.data.total || 0;
+    } else {
+      message.error(articlesRes.message || '获取文章列表失败');
+      useMockData();
+    }
     
     // 获取热门文章
     const hotArticlesRes = await articleApi.getHotArticles();
-    hotArticles.value = hotArticlesRes.data;
+    if (hotArticlesRes.code === 200) {
+      hotArticles.value = hotArticlesRes.data || [];
+    } else {
+      message.error(hotArticlesRes.message || '获取热门文章失败');
+    }
     
     // 获取分类列表
     const categoriesRes = await categoryApi.getCategoryList();
-    categories.value = categoriesRes.data;
+    if (categoriesRes.code === 200) {
+      categories.value = categoriesRes.data.records || [];
+    } else {
+      message.error(categoriesRes.message || '获取分类列表失败');
+    }
     
     // 获取标签列表
     const tagsRes = await tagApi.getTagList();
-    tags.value = tagsRes.data;
+    if (tagsRes.code === 200) {
+      tags.value = tagsRes.data.records || [];
+    } else {
+      message.error(tagsRes.message || '获取标签列表失败');
+    }
   } catch (error) {
     console.error('获取数据失败:', error);
     message.error('获取数据失败，请稍后再试');
@@ -176,12 +195,24 @@ const handlePageChange = (page) => {
           <div class="article-list">
             <h2 class="section-title">最新文章</h2>
             
-            <Card v-for="article in articles" :key="article.id" class="article-card" hoverable @click="goToArticle(article.id)">
+            <div v-if="loading" class="loading-container">
+              <div class="loading-spinner"></div>
+              <p>加载中...</p>
+            </div>
+            
+            <div v-else-if="articles.length === 0" class="empty-container">
+              <p>暂无文章</p>
+            </div>
+            
+            <Card v-else v-for="article in articles" :key="article.id" class="article-card" :class="{'top-article': article.isTop === 1}" hoverable @click="goToArticle(article.id)">
               <div class="article-cover" v-if="article.coverImage">
                 <img :src="article.coverImage" :alt="article.title" />
               </div>
               <div class="article-content">
-                <h3 class="article-title">{{ article.title }}</h3>
+                <h3 class="article-title">
+                  <span v-if="article.isTop === 1" class="top-tag">置顶</span>
+                  {{ article.title }}
+                </h3>
                 <div class="article-meta">
                   <span>{{ article.author }}</span>
                   <span>{{ $formatDate(article.createTime) }}</span>
@@ -215,7 +246,10 @@ const handlePageChange = (page) => {
             <Card class="sidebar-card">
               <template #title>热门文章</template>
               <div class="hot-articles">
-                <div v-for="(article, index) in hotArticles" :key="article.id" class="hot-article-item" @click="goToArticle(article.id)">
+                <div v-if="hotArticles.length === 0" class="empty-container">
+                  <p>暂无热门文章</p>
+                </div>
+                <div v-else v-for="(article, index) in hotArticles" :key="article.id" class="hot-article-item" @click="goToArticle(article.id)">
                   <span class="hot-article-index" :class="{ 'top-three': index < 3 }">{{ index + 1 }}</span>
                   <span class="hot-article-title">{{ article.title }}</span>
                   <span class="hot-article-views">{{ article.viewCount }}</span>
@@ -227,7 +261,10 @@ const handlePageChange = (page) => {
             <Card class="sidebar-card">
               <template #title>文章分类</template>
               <div class="category-list">
-                <div v-for="category in categories" :key="category.id" class="category-item" @click="goToCategory(category.id)">
+                <div v-if="categories.length === 0" class="empty-container">
+                  <p>暂无分类</p>
+                </div>
+                <div v-else v-for="category in categories" :key="category.id" class="category-item" @click="goToCategory(category.id)">
                   <span class="category-name">{{ category.name }}</span>
                   <span class="category-count">{{ category.count }}</span>
                 </div>
@@ -238,7 +275,11 @@ const handlePageChange = (page) => {
             <Card class="sidebar-card">
               <template #title>标签云</template>
               <div class="tag-cloud">
+                <div v-if="tags.length === 0" class="empty-container">
+                  <p>暂无标签</p>
+                </div>
                 <Tag 
+                  v-else
                   v-for="tag in tags" 
                   :key="tag.id" 
                   :color="['blue', 'green', 'orange', 'red', 'purple', 'cyan'][Math.floor(Math.random() * 6)]"
@@ -254,11 +295,29 @@ const handlePageChange = (page) => {
       </Row>
     </div>
   </div>
+  <BackToTop />
 </template>
 
 <style scoped>
 .home-container {
   width: 100%;
+}
+
+.top-tag {
+  display: inline-block;
+  background-color: #ff4d4f;
+  color: white;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 8px;
+  font-weight: bold;
+  vertical-align: middle;
+}
+
+.top-article {
+  border-left: 3px solid #ff4d4f;
+  background-color: #fff8f8;
 }
 
 .banner {
@@ -432,5 +491,33 @@ const handlePageChange = (page) => {
 
 .tag-item {
   cursor: pointer;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 0;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #1890ff;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-container {
+  text-align: center;
+  padding: 30px 0;
+  color: #999;
 }
 </style>

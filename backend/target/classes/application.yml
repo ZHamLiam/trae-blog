@@ -72,3 +72,9 @@ jwt:
   expiration: 604800 # 7天，单位秒
   tokenHeader: Authorization
   tokenPrefix: Bearer
+
+# 文件上传配置
+file:
+  upload:
+    path: ${user.dir}/uploads
+    url: /api/uploads

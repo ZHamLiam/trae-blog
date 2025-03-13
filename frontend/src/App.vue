@@ -9,9 +9,11 @@
 
 <style>
 /* 全局样式 */
-body {
+html, body {
   margin: 0;
   padding: 0;
+  height: 100%;
+  width: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -20,5 +22,7 @@ body {
 
 #app {
   min-height: 100vh;
+  width: 100%;
+  background-color: #f5f5f5;
 }
 </style>

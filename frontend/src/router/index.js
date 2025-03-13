@@ -16,6 +16,7 @@ const CategoryManage = () => import('../views/admin/category/CategoryManage.vue'
 const TagManage = () => import('../views/admin/tag/TagManage.vue')
 const CommentManage = () => import('../views/admin/comment/CommentManage.vue')
 const UserManage = () => import('../views/admin/user/UserManage.vue')
+const ProfileCenter = () => import('../views/admin/profile/ProfileCenter.vue')
 
 // 认证页面
 const Login = () => import('../views/auth/Login.vue')
@@ -122,6 +123,12 @@ const routes = [
         name: 'UserManage',
         component: UserManage,
         meta: { title: '用户管理' }
+      },
+      {
+        path: 'profile',
+        name: 'ProfileCenter',
+        component: ProfileCenter,
+        meta: { title: '个人中心' }
       }
     ]
   }

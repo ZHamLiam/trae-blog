@@ -126,6 +126,11 @@ const logout = () => {
 // 用户下拉菜单项
 const userMenuItems = [
   {
+    key: '/admin/profile',
+    label: '个人中心',
+    icon: () => h(UserOutlined),
+  },
+  {
     key: 'logout',
     label: '退出登录',
     icon: () => h(LogoutOutlined),
@@ -136,6 +141,8 @@ const userMenuItems = [
 const handleUserMenuClick = (e) => {
   if (e.key === 'logout') {
     logout();
+  } else if (e.key.startsWith('/')) {
+    router.push(e.key);
   }
 };
 </script>

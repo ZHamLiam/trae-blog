@@ -5,6 +5,7 @@ import com.trae.blog.common.Result;
 import com.trae.blog.entity.Tag;
 import com.trae.blog.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -59,6 +60,7 @@ public class TagController {
      * @return 添加结果
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('tag:create')")
     public Result<Boolean> addTag(@RequestBody Tag tag) {
         boolean result = tagService.addTag(tag);
         if (result) {
@@ -76,6 +78,7 @@ public class TagController {
      * @return 更新结果
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('tag:update')")
     public Result<Boolean> updateTag(
             @PathVariable Long id,
             @RequestBody Tag tag) {
@@ -95,6 +98,7 @@ public class TagController {
      * @return 删除结果
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('tag:delete')")
     public Result<Boolean> deleteTag(@PathVariable Long id) {
         boolean result = tagService.deleteTag(id);
         if (result) {
@@ -122,6 +126,7 @@ public class TagController {
      * @return 删除结果
      */
     @DeleteMapping("/batch")
+    @PreAuthorize("hasAuthority('tag:delete')")
     public Result<Boolean> batchDeleteTags(@RequestBody Map<String, List<Long>> params) {
         List<Long> ids = params.get("ids");
         if (ids == null || ids.isEmpty()) {

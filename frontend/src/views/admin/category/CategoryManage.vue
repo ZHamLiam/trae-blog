@@ -85,11 +85,13 @@ const columns = [
     title: '分类名称',
     dataIndex: 'name',
     key: 'name',
+    ellipsis: true,
   },
   {
     title: '描述',
     dataIndex: 'description',
     key: 'description',
+    ellipsis: true,
   },
   {
     title: '文章数量',

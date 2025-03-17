@@ -14,9 +14,15 @@ request.interceptors.request.use(
   config => {
     // 从localStorage获取token
     const token = localStorage.getItem('token');
-    // 如果有token则添加到请求头
-    if (token) {
+    // 添加调试日志，查看token的值
+    console.log('当前token值:', token);
+    
+    // 如果有token且token不是undefined或null，则添加到请求头
+    if (token && token !== 'undefined' && token !== 'null') {
       config.headers['Authorization'] = `Bearer ${token}`;
+      console.log('添加到请求头的Authorization:', `Bearer ${token}`);
+    } else {
+      console.warn('Token无效或不存在，不添加到请求头');
     }
     return config;
   },

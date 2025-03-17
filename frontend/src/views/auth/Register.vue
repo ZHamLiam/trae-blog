@@ -3,6 +3,7 @@ import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { Form, Input, Button, Card, message } from 'ant-design-vue';
 import { UserOutlined, LockOutlined, MailOutlined, UserAddOutlined } from '@ant-design/icons-vue';
+import userApi from '@/api/user';
 
 const router = useRouter();
 
@@ -50,18 +51,30 @@ function validateConfirmPassword(rule, value) {
 }
 
 // 提交表单
-const onFinish = (values) => {
+const onFinish = async (values) => {
   loading.value = true;
   
-  // 模拟API请求
-  setTimeout(() => {
-    // 这里将来会通过API进行注册
-    console.log('注册信息:', values);
+  try {
+    // 调用注册API
+    const result = await userApi.register({
+      username: values.username,
+      nickname: values.nickname,
+      email: values.email,
+      password: values.password
+    });
     
-    message.success('注册成功，请登录');
-    router.push('/login');
+    if (result && result.code === 200) {
+      message.success('注册成功，请登录');
+      router.push('/login');
+    } else {
+      message.error(result.message || '注册失败，请稍后重试');
+    }
+  } catch (error) {
+    console.error('注册失败:', error);
+    message.error('注册失败，请稍后重试');
+  } finally {
     loading.value = false;
-  }, 1000);
+  }
 };
 
 // 跳转到登录页

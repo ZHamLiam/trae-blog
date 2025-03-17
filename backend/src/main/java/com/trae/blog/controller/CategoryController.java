@@ -5,6 +5,7 @@ import com.trae.blog.common.Result;
 import com.trae.blog.entity.Category;
 import com.trae.blog.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -59,6 +60,7 @@ public class CategoryController {
      * @return 添加结果
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('category:create')")
     public Result<Boolean> addCategory(@RequestBody Category category) {
         boolean result = categoryService.addCategory(category);
         if (result) {
@@ -76,6 +78,7 @@ public class CategoryController {
      * @return 更新结果
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('category:update')")
     public Result<Boolean> updateCategory(
             @PathVariable Long id,
             @RequestBody Category category) {
@@ -95,6 +98,7 @@ public class CategoryController {
      * @return 删除结果
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('category:delete')")
     public Result<Boolean> deleteCategory(@PathVariable Long id) {
         boolean result = categoryService.deleteCategory(id);
         if (result) {
@@ -122,6 +126,7 @@ public class CategoryController {
      * @return 删除结果
      */
     @DeleteMapping("/batch")
+    @PreAuthorize("hasAuthority('category:delete')")
     public Result<Boolean> batchDeleteCategories(@RequestBody Map<String, List<Long>> params) {
         List<Long> ids = params.get("ids");
         if (ids == null || ids.isEmpty()) {

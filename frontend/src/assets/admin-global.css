@@ -1,0 +1,206 @@
+/* 后台管理全局样式 */
+
+/* 后台布局样式 */
+.admin-layout {
+  min-height: 100vh;
+}
+
+.admin-layout .logo {
+  height: 32px;
+  margin: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--menu-dark-highlight-color);
+  font-size: 18px;
+  font-weight: var(--font-weight-bold);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.admin-layout .site-layout {
+  transition: all 0.2s;
+}
+
+.admin-layout .site-layout-background {
+  background-color: var(--component-bg);
+}
+
+/* 后台头部样式 */
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background-color: var(--component-bg);
+  box-shadow: var(--shadow-1-down);
+  z-index: 1;
+  position: relative;
+}
+
+.admin-header .header-left {
+  display: flex;
+  align-items: center;
+}
+
+.admin-header .header-right {
+  display: flex;
+  align-items: center;
+}
+
+.admin-header .trigger {
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.3s;
+  padding: 0 12px;
+}
+
+.admin-header .trigger:hover {
+  color: var(--primary-color);
+}
+
+.admin-header .user-dropdown {
+  cursor: pointer;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+}
+
+.admin-header .user-dropdown:hover {
+  background-color: var(--hover-bg-color);
+}
+
+/* 后台内容区域样式 */
+.admin-content {
+  margin: 24px 16px;
+  padding: 24px;
+  background-color: var(--component-bg);
+  min-height: 280px;
+}
+
+/* 后台页面通用卡片样式 */
+.admin-card {
+  margin-bottom: 24px;
+  border-radius: 4px;
+  box-shadow: var(--shadow-1-down);
+}
+
+.admin-card .ant-card-head {
+  border-bottom: 1px solid var(--border-color-split);
+  padding: 0 16px;
+}
+
+.admin-card .ant-card-head-title {
+  padding: 16px 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+}
+
+/* 后台表格样式统一 */
+.admin-table {
+  width: 100%;
+}
+
+.admin-table .ant-table-thead > tr > th {
+  background-color: var(--table-header-bg, #fafafa);
+  font-weight: var(--font-weight-medium);
+}
+
+.admin-table .ant-table-row:hover {
+  background-color: var(--hover-bg-color);
+}
+
+/* 后台表单样式统一 */
+.admin-form .ant-form-item-label > label {
+  font-weight: var(--font-weight-medium);
+}
+
+.admin-form .ant-form-item {
+  margin-bottom: 20px;
+}
+
+.admin-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* 后台按钮样式统一 */
+.admin-btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.admin-btn-primary:hover {
+  background-color: var(--primary-color-hover);
+  border-color: var(--primary-color-hover);
+}
+
+.admin-btn-danger {
+  background-color: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+.admin-btn-danger:hover {
+  background-color: #ff7875;
+  border-color: #ff7875;
+}
+
+/* 后台搜索区域样式 */
+.admin-search-form {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: var(--component-bg);
+  border-radius: 4px;
+  box-shadow: var(--shadow-1-down);
+}
+
+.admin-search-form .ant-form-item {
+  margin-bottom: 16px;
+}
+
+.admin-search-form .search-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* 后台分页样式 */
+.admin-pagination {
+  margin-top: 16px;
+  text-align: right;
+}
+
+/* 后台标签样式 */
+.admin-tag {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+/* 后台弹窗样式 */
+.admin-modal .ant-modal-header {
+  border-bottom: 1px solid var(--border-color-split);
+}
+
+.admin-modal .ant-modal-footer {
+  border-top: 1px solid var(--border-color-split);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .admin-content {
+    margin: 16px 8px;
+    padding: 16px;
+  }
+  
+  .admin-search-form {
+    padding: 12px;
+  }
+  
+  .admin-card .ant-card-head-title {
+    padding: 12px 0;
+    font-size: var(--font-size-base);
+  }
+}

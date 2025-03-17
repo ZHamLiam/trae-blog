@@ -84,6 +84,7 @@ const columns = [
     title: '标签名称',
     dataIndex: 'name',
     key: 'name',
+    ellipsis: true,
   },
   {
     title: '文章数量',

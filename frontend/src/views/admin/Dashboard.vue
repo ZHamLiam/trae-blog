@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, getCurrentInstance } from 'vue';
+import DashboardCharts from '@/components/DashboardCharts.vue';
 import { Card, Row, Col, Statistic, List, Table, Tag, message, Modal } from 'ant-design-vue';
 import {
   FileTextOutlined,
@@ -36,6 +37,12 @@ const recentComments = ref([]);
 
 // 加载状态
 const loading = ref(true);
+
+// 统计图表数据
+const statisticsData = ref(null);
+
+// 图表加载状态
+const chartLoading = ref(true);
 
 // 文章预览相关
 const previewVisible = ref(false);
@@ -145,6 +152,7 @@ const closePreview = () => {
 // 获取仪表盘数据
 const fetchDashboardData = async () => {
   loading.value = true;
+  chartLoading.value = true;
   
   try {
     // 使用仪表盘API获取统计数据
@@ -188,6 +196,20 @@ const fetchDashboardData = async () => {
       const recentCommentsData = await commentApi.getRecentComments();
       recentComments.value = Array.isArray(recentCommentsData.data) ? recentCommentsData.data : [];
     }
+    
+    // 获取统计图表数据
+    try {
+      const chartsData = await dashboardApi.default.getStatisticsData();
+      if (chartsData && chartsData.data) {
+        statisticsData.value = chartsData.data;
+      }
+    } catch (chartError) {
+      console.error('获取统计图表数据失败:', chartError);
+      message.error('获取统计图表数据失败，请稍后重试');
+      statisticsData.value = null;
+    } finally {
+      chartLoading.value = false;
+    }
   } catch (error) {
     console.error('获取仪表盘数据失败:', error);
     message.error('获取仪表盘数据失败，请稍后重试');
@@ -202,6 +224,7 @@ const fetchDashboardData = async () => {
     recentArticles.value = [];
     hotArticles.value = [];
     recentComments.value = [];
+    statisticsData.value = null;
   } finally {
     loading.value = false;
   }
@@ -209,13 +232,13 @@ const fetchDashboardData = async () => {
 </script>
 
 <template>
-  <div class="dashboard">
+  <div class="dashboard-container admin-content">
     <h2 class="page-title">仪表盘</h2>
     
     <!-- 统计卡片 -->
     <a-row :gutter="16" class="stat-cards">
       <a-col :span="6">
-        <a-card>
+        <a-card class="admin-card">
           <a-statistic 
             title="文章总数" 
             :value="statistics.articleCount"
@@ -228,7 +251,7 @@ const fetchDashboardData = async () => {
         </a-card>
       </a-col>
       <a-col :span="6">
-        <a-card>
+        <a-card class="admin-card">
           <a-statistic 
             title="总浏览量" 
             :value="statistics.viewCount"
@@ -241,7 +264,7 @@ const fetchDashboardData = async () => {
         </a-card>
       </a-col>
       <a-col :span="6">
-        <a-card>
+        <a-card class="admin-card">
           <a-statistic 
             title="评论总数" 
             :value="statistics.commentCount"
@@ -254,7 +277,7 @@ const fetchDashboardData = async () => {
         </a-card>
       </a-col>
       <a-col :span="6">
-        <a-card>
+        <a-card class="admin-card">
           <a-statistic 
             title="用户总数" 
             :value="statistics.userCount"
@@ -271,7 +294,7 @@ const fetchDashboardData = async () => {
     <!-- 最近文章和热门文章 -->
     <a-row :gutter="16" class="data-cards">
       <a-col :span="12">
-        <a-card title="最近发布的文章" :loading="loading">
+        <a-card title="最近发布的文章" :loading="loading" class="admin-card">
           <a-list
             :data-source="recentArticles"
             :pagination="false"
@@ -292,7 +315,7 @@ const fetchDashboardData = async () => {
         </a-card>
       </a-col>
       <a-col :span="12">
-        <a-card title="热门文章" :loading="loading">
+        <a-card title="热门文章" :loading="loading" class="admin-card">
           <a-table
             :columns="hotArticleColumns"
             :data-source="hotArticles"
@@ -309,6 +332,9 @@ const fetchDashboardData = async () => {
               <template v-else-if="column.key === 'createTime'">
                 <span>{{ text ? proxy.$formatDate(text) : '' }}</span>
               </template>
+              <template v-else-if="column.key === 'categoryName'">
+                <span>{{ text || '未分类' }}</span>
+              </template>
               <template v-else-if="column.key === 'title'">
                 <a @click="previewArticle(record.id)" class="article-link">{{ text }}</a>
               </template>
@@ -321,7 +347,7 @@ const fetchDashboardData = async () => {
     <!-- 最新评论 -->
     <a-row class="data-cards">
       <a-col :span="24">
-        <a-card title="最新评论" :loading="loading">
+        <a-card title="最新评论" :loading="loading" class="admin-card">
           <a-table
             :columns="commentColumns"
             :data-source="recentComments"
@@ -346,6 +372,20 @@ const fetchDashboardData = async () => {
               </template>
             </template>
           </a-table>
+        </a-card>
+      </a-col>
+    </a-row>
+    
+    <!-- 统计图表 -->
+    <a-row class="data-cards">
+      <a-col :span="24">
+        <a-card title="数据统计" :loading="chartLoading" class="admin-card">
+          <template v-if="statisticsData">
+            <dashboard-charts :statistics-data="statisticsData" :loading="chartLoading" />
+          </template>
+          <template v-else>
+            <a-empty description="暂无统计数据" />
+          </template>
         </a-card>
       </a-col>
     </a-row>
@@ -400,5 +440,9 @@ const fetchDashboardData = async () => {
 
 .article-link:hover {
   text-decoration: underline;
+}
+
+.recent-articles-card {
+  height: 100%;
 }
 </style>

@@ -8,5 +8,13 @@ export default {
       url: '/dashboard/stats',
       method: 'get'
     });
+  },
+  
+  // 获取统计图表数据
+  getStatisticsData() {
+    return request({
+      url: '/dashboard/statistics',
+      method: 'get'
+    });
   }
 };

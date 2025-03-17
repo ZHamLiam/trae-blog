@@ -5,6 +5,7 @@ import com.trae.blog.common.Result;
 import com.trae.blog.entity.Comment;
 import com.trae.blog.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -78,6 +79,7 @@ public class CommentController {
      * @return 更新结果
      */
     @PutMapping("/{id}/status/{status}")
+    @PreAuthorize("hasAuthority('comment:update')")
     public Result<Boolean> updateCommentStatus(
             @PathVariable Long id,
             @PathVariable Integer status) {
@@ -96,6 +98,7 @@ public class CommentController {
      * @return 删除结果
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('comment:delete')")
     public Result<Boolean> deleteComment(@PathVariable Long id) {
         boolean result = commentService.deleteComment(id);
         if (result) {
@@ -123,6 +126,7 @@ public class CommentController {
      * @return 删除结果
      */
     @DeleteMapping("/batch")
+    @PreAuthorize("hasAuthority('comment:delete')")
     public Result<Boolean> batchDeleteComments(@RequestBody Map<String, List<Long>> params) {
         List<Long> ids = params.get("ids");
         if (ids == null || ids.isEmpty()) {

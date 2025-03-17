@@ -404,9 +404,9 @@ const closePreview = () => {
 
 <template>
   <div class="article-manage-container">
-    <Card title="文章管理" :bordered="false">
+    <Card title="文章管理" :bordered="false" class="admin-card">
       <!-- 查询表单 -->
-      <Form layout="inline" :model="queryParams" class="search-form">
+      <Form layout="inline" :model="queryParams" class="admin-search-form">
         <Form.Item label="分类">
           <Select
             v-model:value="queryParams.categoryId"
@@ -496,6 +496,7 @@ const closePreview = () => {
           selectedRowKeys: selectedRowKeys,
           onChange: (keys) => selectedRowKeys = keys
         }"
+        class="admin-table"
       />
     </Card>
     

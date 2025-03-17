@@ -35,7 +35,8 @@ const fetchData = async () => {
     // 获取文章列表
     const articlesRes = await articleApi.getArticleList({
       page: pagination.value.current,
-      size: pagination.value.pageSize
+      size: pagination.value.pageSize,
+      status: 1 // 只获取已发布的文章
     });
     
     if (articlesRes.code === 200) {

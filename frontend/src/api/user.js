@@ -5,7 +5,7 @@ export default {
   // 用户登录
   login(data) {
     return request({
-      url: '/auth/login',
+      url: '/users/login',
       method: 'post',
       data
     });
@@ -20,10 +20,18 @@ export default {
     });
   },
   
-  // 获取用户信息
+  // 获取当前登录用户信息
   getUserInfo() {
     return request({
       url: '/users/info',
+      method: 'get'
+    });
+  },
+  
+  // 根据ID获取用户信息
+  getUserById(id) {
+    return request({
+      url: `/users/${id}`,
       method: 'get'
     });
   },
@@ -43,6 +51,22 @@ export default {
       url: `/users/${id}`,
       method: 'put',
       data
+    });
+  },
+  
+  // 启用用户
+  enableUser(id) {
+    return request({
+      url: `/users/${id}/enable`,
+      method: 'put'
+    });
+  },
+  
+  // 禁用用户
+  disableUser(id) {
+    return request({
+      url: `/users/${id}/disable`,
+      method: 'put'
     });
   },
   
@@ -72,6 +96,23 @@ export default {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
+    });
+  },
+  
+  // 获取用户的角色ID列表
+  getUserRoleIds(id) {
+    return request({
+      url: `/users/${id}/roles`,
+      method: 'get'
+    });
+  },
+  
+  // 分配用户角色
+  assignRoles(id, data) {
+    return request({
+      url: `/users/${id}/roles`,
+      method: 'post',
+      data
     });
   }
 };

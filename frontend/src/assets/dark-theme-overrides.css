@@ -1,0 +1,148 @@
+/* Ant Design 深色模式样式覆盖 */
+
+/* 表格深色模式样式 */
+[data-theme='dark'] .ant-table {
+  background-color: var(--table-bg);
+  color: var(--text-color);
+}
+
+[data-theme='dark'] .ant-table-thead > tr > th {
+  background-color: var(--table-header-bg);
+  color: var(--table-header-color);
+  border-bottom: 1px solid var(--table-border-color);
+}
+
+[data-theme='dark'] .ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--table-border-color);
+}
+
+[data-theme='dark'] .ant-table-tbody > tr:hover > td {
+  background-color: var(--table-row-hover-bg);
+}
+
+[data-theme='dark'] .ant-table-row-expand-icon {
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] .ant-table-footer {
+  background-color: var(--table-footer-bg);
+  color: var(--table-footer-color);
+}
+
+/* 表单深色模式样式 */
+[data-theme='dark'] .ant-form {
+  color: var(--text-color);
+}
+
+[data-theme='dark'] .ant-form-item-label > label {
+  color: var(--form-item-label-color);
+}
+
+[data-theme='dark'] .ant-form-item-label > label.ant-form-item-required::before {
+  color: var(--form-item-required-color);
+}
+
+[data-theme='dark'] .ant-form-item-explain, 
+[data-theme='dark'] .ant-form-item-extra {
+  color: var(--form-item-help-color);
+}
+
+[data-theme='dark'] .ant-form-item-has-error .ant-form-item-explain, 
+[data-theme='dark'] .ant-form-item-has-error .ant-form-item-split {
+  color: var(--form-item-error-color);
+}
+
+/* 输入框深色模式样式 */
+[data-theme='dark'] .ant-input {
+  background-color: var(--input-bg);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+[data-theme='dark'] .ant-input:hover {
+  border-color: var(--input-hover-border-color);
+}
+
+[data-theme='dark'] .ant-input:focus, 
+[data-theme='dark'] .ant-input-focused {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--input-outline-color);
+}
+
+[data-theme='dark'] .ant-input-disabled {
+  background-color: var(--input-disabled-bg);
+  color: var(--disabled-color);
+}
+
+[data-theme='dark'] .ant-input::placeholder {
+  color: var(--input-placeholder-color);
+}
+
+/* 选择器深色模式样式 */
+[data-theme='dark'] .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  background-color: var(--select-bg);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+[data-theme='dark'] .ant-select-dropdown {
+  background-color: var(--select-dropdown-bg);
+}
+
+[data-theme='dark'] .ant-select-item {
+  color: var(--text-color);
+}
+
+[data-theme='dark'] .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: var(--select-item-selected-bg);
+  color: var(--text-color);
+}
+
+[data-theme='dark'] .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: var(--select-item-active-bg);
+}
+
+/* 按钮深色模式样式 */
+[data-theme='dark'] .ant-btn {
+  background-color: var(--btn-default-bg);
+  border-color: var(--btn-default-border);
+  color: var(--btn-default-color);
+}
+
+[data-theme='dark'] .ant-btn:hover, 
+[data-theme='dark'] .ant-btn:focus {
+  background-color: var(--btn-default-hover-bg);
+  border-color: var(--btn-default-hover-border);
+  color: var(--btn-default-hover-color);
+}
+
+/* 卡片深色模式样式 */
+[data-theme='dark'] .ant-card {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] .ant-card-head {
+  color: var(--card-head-color);
+  border-bottom-color: var(--border-color-split);
+}
+
+/* 弹出层深色模式样式 */
+[data-theme='dark'] .ant-modal-content {
+  background-color: var(--modal-bg);
+}
+
+[data-theme='dark'] .ant-modal-header {
+  background-color: var(--modal-header-bg);
+  border-bottom-color: var(--border-color-split);
+}
+
+[data-theme='dark'] .ant-modal-title {
+  color: var(--heading-color);
+}
+
+[data-theme='dark'] .ant-modal-footer {
+  background-color: var(--modal-footer-bg);
+  border-top-color: var(--border-color-split);
+}

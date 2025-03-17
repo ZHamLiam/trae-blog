@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { Card, Row, Col, Pagination, Tag, Divider, message, Skeleton } from 'ant-design-vue';
-import { EyeOutlined, CalendarOutlined, TagOutlined } from '@ant-design/icons-vue';
+import { Card, Row, Col, Pagination, Tag, Divider, message, Skeleton, Button } from 'ant-design-vue';
+import { EyeOutlined, CalendarOutlined, TagOutlined, HomeOutlined } from '@ant-design/icons-vue';
 import articleApi from '@/api/article';
 import tagApi from '@/api/tag';
 import BackToTop from '@/components/BackToTop.vue';
@@ -47,7 +47,8 @@ const fetchArticles = async () => {
     const result = await articleApi.getArticleList({
       page: pagination.value.current,
       size: pagination.value.pageSize,
-      tagId: tagId.value
+      tagId: tagId.value,
+      status: 1 // 只获取已发布的文章
     });
     
     if (result && result.code === 200) {
@@ -97,6 +98,13 @@ onMounted(() => {
 
 <template>
   <div class="tag-list-container">
+    <!-- 返回首页按钮 -->
+    <div class="home-button-container">
+      <Button type="primary" @click="goToHome" class="home-button">
+        <HomeOutlined /> 返回首页
+      </Button>
+    </div>
+    
     <div class="content-wrapper">
       <div class="tag-header">
         <h1 class="tag-title">标签: {{ tag.name }}</h1>
@@ -157,6 +165,26 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.home-button-container {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+}
+
+.home-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s;
+}
+
+.home-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
 .tag-list-container {
   padding: 20px 0;
   background-color: #f5f5f5;
@@ -324,3 +352,8 @@ onMounted(() => {
   }
 }
 </style>
+
+// 返回首页
+const goToHome = () => {
+  router.push('/');
+};

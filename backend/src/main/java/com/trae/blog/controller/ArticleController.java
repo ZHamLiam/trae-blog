@@ -5,7 +5,10 @@ import com.trae.blog.common.Result;
 import com.trae.blog.entity.Article;
 import com.trae.blog.service.ArticleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.List;
 import java.util.Map;
@@ -51,13 +54,24 @@ public class ArticleController {
      */
     @GetMapping("/{id}")
     public Result<Article> getArticleById(@PathVariable Long id) {
-        // 增加浏览量
-        articleService.incrementViewCount(id);
         // 获取文章详情
         Article article = articleService.getArticleById(id);
         if (article == null) {
             return Result.error("文章不存在");
         }
+        
+        // 检查文章状态，如果是草稿且不是管理接口访问，则拒绝访问
+        // 通过请求路径判断是否为前台访问
+        String requestURI = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest().getRequestURI();
+        boolean isAdminAccess = requestURI.contains("/admin/");
+        
+        if (article.getStatus() == 0 && !isAdminAccess) {
+            return Result.error("文章不存在或已被删除");
+        }
+        
+        // 增加浏览量
+        articleService.incrementViewCount(id);
+        
         return Result.success(article);
     }
 
@@ -68,6 +82,7 @@ public class ArticleController {
      * @return 添加结果
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('article:create')")
     public Result<Boolean> addArticle(@RequestBody Article article) {
         // 从article对象中获取标签ID列表
         List<Long> tagIds = article.getTagIds();
@@ -87,6 +102,7 @@ public class ArticleController {
      * @return 更新结果
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('article:update')")
     public Result<Boolean> updateArticle(
             @PathVariable Long id,
             @RequestBody Article article) {
@@ -108,6 +124,7 @@ public class ArticleController {
      * @return 删除结果
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('article:delete')")
     public Result<Boolean> deleteArticle(@PathVariable Long id) {
         boolean result = articleService.deleteArticle(id);
         if (result) {
@@ -125,6 +142,7 @@ public class ArticleController {
      * @return 更新结果
      */
     @PutMapping("/{id}/status/{status}")
+    @PreAuthorize("hasAuthority('article:update')")
     public Result<Boolean> updateArticleStatus(
             @PathVariable Long id,
             @PathVariable Integer status) {
@@ -144,6 +162,7 @@ public class ArticleController {
      * @return 更新结果
      */
     @PutMapping("/{id}/top/{isTop}")
+    @PreAuthorize("hasAuthority('article:update')")
     public Result<Boolean> updateArticleTopStatus(
             @PathVariable Long id,
             @PathVariable Integer isTop) {
@@ -184,6 +203,7 @@ public class ArticleController {
      * @return 删除结果
      */
     @DeleteMapping("/batch")
+    @PreAuthorize("hasAuthority('article:delete')")
     public Result<Boolean> batchDeleteArticles(@RequestBody Map<String, List<Long>> params) {
         List<Long> ids = params.get("ids");
         if (ids == null || ids.isEmpty()) {

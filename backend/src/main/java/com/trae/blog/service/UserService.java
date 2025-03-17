@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.trae.blog.entity.User;
 
+import java.util.List;
+
 /**
  * 用户服务接口
  */
@@ -39,9 +41,10 @@ public interface UserService extends IService<User> {
      * @param page 页码
      * @param size 每页大小
      * @param keyword 关键词
+     * @param status 用户状态，null表示全部状态，1表示正常，0表示禁用
      * @return 用户分页列表
      */
-    IPage<User> getUserList(Integer page, Integer size, String keyword);
+    IPage<User> getUserList(Integer page, Integer size, String keyword, Integer status);
     
     /**
      * 更新用户信息
@@ -67,4 +70,37 @@ public interface UserService extends IService<User> {
      * @return 修改成功返回true，失败返回false
      */
     boolean changePassword(String oldPassword, String newPassword);
+    
+    /**
+     * 获取用户的角色ID列表
+     *
+     * @param userId 用户ID
+     * @return 角色ID列表
+     */
+    List<Long> getUserRoleIds(Long userId);
+    
+    /**
+     * 分配用户角色
+     *
+     * @param userId  用户ID
+     * @param roleIds 角色ID列表
+     * @return 是否成功
+     */
+    boolean assignRoles(Long userId, List<Long> roleIds);
+    
+    /**
+     * 启用用户
+     *
+     * @param id 用户ID
+     * @return 是否成功
+     */
+    boolean enableUser(Long id);
+    
+    /**
+     * 禁用用户
+     *
+     * @param id 用户ID
+     * @return 是否成功
+     */
+    boolean disableUser(Long id);
 }

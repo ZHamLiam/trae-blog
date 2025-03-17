@@ -1,0 +1,153 @@
+:root {
+  /* 浅色模式变量 */
+  --primary-color: #1890ff;
+  --primary-color-hover: #40a9ff;
+  --primary-color-active: #096dd9;
+  --primary-color-outline: rgba(24, 144, 255, 0.2);
+  
+  --text-color: rgba(0, 0, 0, 0.85);
+  --text-color-secondary: rgba(0, 0, 0, 0.45);
+  --disabled-color: rgba(0, 0, 0, 0.25);
+  --heading-color: rgba(0, 0, 0, 0.85);
+  
+  --bg-color: #fff;
+  --component-bg: #fff;
+  --hover-bg-color: rgba(0, 0, 0, 0.04);
+  
+  --border-color: #d9d9d9;
+  --border-color-split: #f0f0f0;
+  
+  --layout-body-bg: #f0f2f5;
+  --layout-header-bg: #001529;
+  --layout-sider-bg: #001529;
+  --layout-trigger-bg: #002140;
+  
+  --shadow-color: rgba(0, 0, 0, 0.15);
+  --shadow-1-up: 0 -2px 8px var(--shadow-color);
+  --shadow-1-down: 0 2px 8px var(--shadow-color);
+  --shadow-1-left: -2px 0 8px var(--shadow-color);
+  --shadow-1-right: 2px 0 8px var(--shadow-color);
+  
+  --box-shadow-base: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+  
+  /* 菜单颜色 */
+  --menu-dark-bg: #001529;
+  --menu-dark-submenu-bg: #000c17;
+  --menu-dark-highlight-color: #fff;
+  --menu-dark-item-active-bg: var(--primary-color);
+  
+  --menu-item-color: rgba(0, 0, 0, 0.85);
+  --menu-highlight-color: var(--primary-color);
+  --menu-item-active-bg: #e6f7ff;
+  
+  /* 卡片颜色 */
+  --card-bg: #fff;
+  --card-head-color: rgba(0, 0, 0, 0.85);
+  --card-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09);
+}
+
+/* 深色模式变量 */
+[data-theme='dark'] {
+  --primary-color: #177ddc;
+  --primary-color-hover: #1890ff;
+  --primary-color-active: #0050b3;
+  --primary-color-outline: rgba(24, 144, 255, 0.2);
+  
+  --text-color: rgba(255, 255, 255, 0.85);
+  --text-color-secondary: rgba(255, 255, 255, 0.45);
+  --disabled-color: rgba(255, 255, 255, 0.25);
+  --heading-color: rgba(255, 255, 255, 0.85);
+  
+  --bg-color: #141414;
+  --component-bg: #1f1f1f;
+  --hover-bg-color: rgba(255, 255, 255, 0.08);
+  
+  --border-color: #434343;
+  --border-color-split: #303030;
+  
+  --layout-body-bg: #000;
+  --layout-header-bg: #141414;
+  --layout-sider-bg: #141414;
+  --layout-trigger-bg: #262626;
+  
+  --shadow-color: rgba(0, 0, 0, 0.45);
+  --shadow-1-up: 0 -2px 8px var(--shadow-color);
+  --shadow-1-down: 0 2px 8px var(--shadow-color);
+  --shadow-1-left: -2px 0 8px var(--shadow-color);
+  --shadow-1-right: 2px 0 8px var(--shadow-color);
+  
+  --box-shadow-base: 0 3px 6px -4px rgba(0, 0, 0, 0.48), 0 6px 16px 0 rgba(0, 0, 0, 0.32), 0 9px 28px 8px rgba(0, 0, 0, 0.2);
+  
+  /* 菜单颜色 */
+  --menu-dark-bg: #141414;
+  --menu-dark-submenu-bg: #000;
+  --menu-dark-highlight-color: #fff;
+  --menu-dark-item-active-bg: var(--primary-color);
+  
+  --menu-item-color: rgba(255, 255, 255, 0.85);
+  --menu-highlight-color: var(--primary-color);
+  --menu-item-active-bg: #111b26;
+  
+  /* 卡片颜色 */
+  --card-bg: #1f1f1f;
+  --card-head-color: rgba(255, 255, 255, 0.85);
+  --card-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.64), 0 3px 6px 0 rgba(0, 0, 0, 0.48), 0 5px 12px 4px rgba(0, 0, 0, 0.36);
+  
+  /* 表格颜色 */
+  --table-bg: #1f1f1f;
+  --table-header-bg: #262626;
+  --table-header-color: rgba(255, 255, 255, 0.85);
+  --table-row-hover-bg: #303030;
+  --table-expanded-row-bg: #262626;
+  --table-footer-bg: #262626;
+  --table-footer-color: rgba(255, 255, 255, 0.85);
+  --table-border-color: #434343;
+  
+  /* 表单颜色 */
+  --form-bg: #1f1f1f;
+  --form-item-label-color: rgba(255, 255, 255, 0.85);
+  --form-item-required-color: #ff4d4f;
+  --form-item-help-color: rgba(255, 255, 255, 0.45);
+  --form-item-error-color: #ff4d4f;
+  
+  /* 输入框颜色 */
+  --input-bg: #141414;
+  --input-placeholder-color: rgba(255, 255, 255, 0.3);
+  --input-hover-border-color: #165996;
+  --input-disabled-bg: rgba(255, 255, 255, 0.08);
+  --input-outline-color: rgba(24, 144, 255, 0.2);
+  
+  /* 选择器颜色 */
+  --select-bg: #141414;
+  --select-item-selected-bg: #111b26;
+  --select-item-active-bg: #1f1f1f;
+  --select-dropdown-bg: #1f1f1f;
+  
+  /* 按钮颜色 */
+  --btn-default-bg: transparent;
+  --btn-default-border: #434343;
+  --btn-default-color: rgba(255, 255, 255, 0.85);
+  --btn-default-hover-bg: rgba(255, 255, 255, 0.08);
+  --btn-default-hover-border: #165996;
+  --btn-default-hover-color: rgba(255, 255, 255, 0.85);
+  
+  /* 弹出层颜色 */
+  --popover-bg: #1f1f1f;
+  --popover-arrow-color: #1f1f1f;
+  --tooltip-bg: rgba(0, 0, 0, 0.75);
+  --modal-bg: #1f1f1f;
+  --modal-header-bg: #1f1f1f;
+  --modal-footer-bg: #1f1f1f;
+  --drawer-bg: #1f1f1f;
+  --drawer-header-bg: #1f1f1f;
+}
+
+/* 响应式断点 */
+:root {
+  --screen-xs: 480px;
+  --screen-sm: 576px;
+  --screen-md: 768px;
+  --screen-lg: 992px;
+  --screen-xl: 1200px;
+  --screen-xxl: 1600px;
+}

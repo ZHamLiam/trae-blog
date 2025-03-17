@@ -1,6 +1,7 @@
 package com.trae.blog.service;
 
 import com.trae.blog.dto.DashboardDTO;
+import com.trae.blog.dto.StatisticsDTO;
 
 /**
  * 仪表盘服务接口
@@ -14,4 +15,11 @@ public interface DashboardService {
      * @return 仪表盘数据传输对象
      */
     DashboardDTO getDashboardStats();
+    
+    /**
+     * 获取统计图表数据
+     *
+     * @return 统计数据传输对象
+     */
+    StatisticsDTO getStatisticsData();
 }

@@ -354,15 +354,38 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void incrementViewCount(Long id) {
-        // 从数据库获取最新的文章信息
-        Article article = getById(id);
+        // 缓存中的浏览量key
+        String viewCountKey = "view:article:count:" + id;
         
-        if (article != null) {
-            // 更新浏览量
-            article.setViewCount(article.getViewCount() + 1);
-            updateById(article);
-            
-            // 更新缓存
+        // 从缓存中获取浏览量
+        Object cachedCount = redisTemplate.opsForValue().get(viewCountKey);
+        Integer viewCount = 1;
+        
+        if (cachedCount != null) {
+            // 如果缓存中存在，则增加浏览量
+            if (cachedCount instanceof Integer) {
+                viewCount = (Integer) cachedCount + 1;
+            } else {
+                // 尝试转换其他类型
+                viewCount = Integer.parseInt(cachedCount.toString()) + 1;
+            }
+        } else {
+            // 缓存未命中，从数据库获取
+            Article article = getById(id);
+            if (article != null && article.getViewCount() != null) {
+                viewCount = article.getViewCount() + 1;
+            }
+        }
+        
+        // 更新缓存中的浏览量，设置24小时过期
+        redisTemplate.opsForValue().set(viewCountKey, viewCount, 24, TimeUnit.HOURS);
+        
+        // 获取文章缓存
+        Object cachedArticle = redisTemplate.opsForValue().get("article:" + id);
+        if (cachedArticle instanceof Article) {
+            // 更新缓存中文章的浏览量
+            Article article = (Article) cachedArticle;
+            article.setViewCount(viewCount);
             redisTemplate.opsForValue().set("article:" + id, article, 1, TimeUnit.HOURS);
         }
     }

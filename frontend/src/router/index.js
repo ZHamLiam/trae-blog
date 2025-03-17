@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/store/user'
+import { usePermissionStore } from '@/store/permission'
 
 // 前台页面
 const Home = () => import('../views/front/Home.vue')
@@ -17,6 +19,8 @@ const TagManage = () => import('../views/admin/tag/TagManage.vue')
 const CommentManage = () => import('../views/admin/comment/CommentManage.vue')
 const UserManage = () => import('../views/admin/user/UserManage.vue')
 const ProfileCenter = () => import('../views/admin/profile/ProfileCenter.vue')
+const RoleManage = () => import('../views/admin/role/RoleManage.vue')
+const PermissionManage = () => import('../views/admin/permission/PermissionManage.vue')
 
 // 认证页面
 const Login = () => import('../views/auth/Login.vue')
@@ -73,11 +77,12 @@ const routes = [
   {
     path: '/admin',
     name: 'AdminLayout',
+    redirect: '/dashboard',
     component: AdminLayout,
     meta: { requiresAuth: true, title: '后台管理' },
     children: [
       {
-        path: '',
+        path: '/dashboard',
         name: 'Dashboard',
         component: Dashboard,
         meta: { title: '仪表盘' }
@@ -129,6 +134,18 @@ const routes = [
         name: 'ProfileCenter',
         component: ProfileCenter,
         meta: { title: '个人中心' }
+      },
+      {
+        path: 'role',
+        name: 'RoleManage',
+        component: RoleManage,
+        meta: { title: '角色管理' }
+      },
+      {
+        path: 'permission',
+        name: 'PermissionManage',
+        component: PermissionManage,
+        meta: { title: '权限管理' }
       }
     ]
   }
@@ -140,19 +157,48 @@ const router = createRouter({
 })
 
 // 全局前置守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   // 设置页面标题
   document.title = to.meta.title ? `${to.meta.title} - Trae Blog` : 'Trae Blog'
   
   // 检查是否需要登录权限
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    // 从localStorage获取token
-    const token = localStorage.getItem('token')
-    if (!token) {
+    const userStore = useUserStore()
+    const permissionStore = usePermissionStore()
+    
+    // 检查是否有token
+    if (!userStore.token) {
       next({
         path: '/login',
         query: { redirect: to.fullPath }
       })
+      return
+    }
+    
+    // 如果没有用户信息，获取用户信息
+    if (!Object.keys(userStore.userInfo).length) {
+      try {
+        await userStore.getUserInfo()
+      } catch (error) {
+        // 获取用户信息失败，可能是token过期
+        userStore.logout()
+        next({
+          path: '/login',
+          query: { redirect: to.fullPath }
+        })
+        return
+      }
+    }
+    
+    // 如果没有菜单权限，获取菜单权限
+    if (!permissionStore.menus.length) {
+      try {
+        await permissionStore.getUserMenusAndPermissions()
+        next({ ...to, replace: true })
+      } catch (error) {
+        // 获取权限失败
+        next()
+      }
     } else {
       next()
     }

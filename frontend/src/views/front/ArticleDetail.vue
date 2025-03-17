@@ -1,18 +1,21 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Card, Avatar, Tag, Divider, Button, Comment, Form, Input, message } from 'ant-design-vue';
-import { LikeOutlined, MessageOutlined, EyeOutlined, ClockCircleOutlined, UserOutlined } from '@ant-design/icons-vue';
+import { LikeOutlined, LikeFilled, MessageOutlined, EyeOutlined, ClockCircleOutlined, UserOutlined, LoginOutlined, HomeOutlined } from '@ant-design/icons-vue';
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
 import articleApi from '@/api/article';
 import commentApi from '@/api/comment';
+import likeApi from '@/api/like';
 import ReadingProgress from '@/components/ReadingProgress.vue';
 import BackToTop from '@/components/BackToTop.vue';
+import { useUserStore } from '@/store/user';
 
 const route = useRoute();
 const router = useRouter();
-const articleId = route.params.id;
+const userStore = useUserStore();
+let articleId = route.params.id;
 
 // 文章数据
 const article = ref({});
@@ -28,6 +31,10 @@ const submitting = ref(false);
 const loading = ref(false);
 // 文章封面图
 const defaultCover = 'https://picsum.photos/1200/400';
+// 文章点赞状态
+const articleLiked = ref(false);
+// 评论点赞状态映射 {commentId: boolean}
+const commentLikedMap = ref({});
 // 预计阅读时间（按照每分钟300字计算）
 const readingTime = computed(() => {
   if (!article.value.content) return 0;
@@ -44,6 +51,10 @@ const fetchArticleDetail = async () => {
       article.value = result.data;
       // 获取相关文章
       fetchRelatedArticles();
+      // 如果用户已登录，获取文章点赞状态
+      if (isLoggedIn.value) {
+        fetchArticleLikeStatus();
+      }
     } else {
       message.error('获取文章详情失败');
     }
@@ -52,6 +63,20 @@ const fetchArticleDetail = async () => {
     message.error('获取文章详情失败，请稍后重试');
   } finally {
     loading.value = false;
+  }
+};
+
+// 获取文章点赞状态
+const fetchArticleLikeStatus = async () => {
+  if (!isLoggedIn.value || !articleId) return;
+  
+  try {
+    const result = await likeApi.getArticleLikeStatus(articleId);
+    if (result && result.code === 200) {
+      articleLiked.value = result.data;
+    }
+  } catch (error) {
+    console.error('获取文章点赞状态失败:', error);
   }
 };
 
@@ -65,12 +90,43 @@ const fetchComments = async () => {
     });
     if (result && result.code === 200) {
       comments.value = result.data.records || [];
+      // 如果用户已登录，获取评论点赞状态
+      if (isLoggedIn.value) {
+        fetchCommentLikeStatus();
+      }
     } else {
       message.error('获取评论失败');
     }
   } catch (error) {
     console.error('获取评论失败:', error);
     message.error('获取评论失败，请稍后重试');
+  }
+};
+
+// 获取评论点赞状态
+const fetchCommentLikeStatus = async () => {
+  if (!isLoggedIn.value || comments.value.length === 0) return;
+  
+  try {
+    // 获取所有评论的点赞状态
+    for (const comment of comments.value) {
+      const result = await likeApi.getCommentLikeStatus(comment.id);
+      if (result && result.code === 200) {
+        commentLikedMap.value[comment.id] = result.data;
+      }
+      
+      // 获取嵌套评论的点赞状态
+      if (comment.children && comment.children.length > 0) {
+        for (const reply of comment.children) {
+          const replyResult = await likeApi.getCommentLikeStatus(reply.id);
+          if (replyResult && replyResult.code === 200) {
+            commentLikedMap.value[reply.id] = replyResult.data;
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('获取评论点赞状态失败:', error);
   }
 };
 
@@ -81,7 +137,8 @@ const fetchRelatedArticles = async () => {
     const result = await articleApi.getArticleList({
       categoryId: article.value.categoryId,
       page: 1,
-      size: 5
+      size: 5,
+      status: 1 // 只获取已发布的文章
     });
     if (result && result.code === 200) {
       // 过滤掉当前文章
@@ -94,8 +151,27 @@ const fetchRelatedArticles = async () => {
   }
 };
 
+// 检查用户是否已登录
+const isLoggedIn = computed(() => {
+  return userStore.token && userStore.token.length > 0;
+});
+
+// 跳转到登录页面
+const goToLogin = () => {
+  router.push({
+    path: '/login',
+    query: { redirect: router.currentRoute.value.fullPath }
+  });
+};
+
 // 提交评论
 const submitComment = async () => {
+  // 检查用户是否已登录
+  if (!isLoggedIn.value) {
+    message.warning('请先登录后再发表评论');
+    return;
+  }
+  
   if (!commentContent.value.trim()) {
     message.warning('评论内容不能为空');
     return;
@@ -104,11 +180,19 @@ const submitComment = async () => {
   submitting.value = true;
   
   try {
+    // 检查用户信息是否存在
+    if (!userStore.userInfo || !userStore.userInfo.id) {
+      message.error('用户信息不完整，请重新登录');
+      goToLogin();
+      return;
+    }
+    
     const result = await commentApi.addComment({
       articleId: articleId,
-      content: commentContent.value
+      content: commentContent.value,
+      userId: userStore.userInfo.id
     });
-    
+    console.log('id:', userStore.userInfo);
     if (result && result.code === 200) {
       // 重新获取评论列表
       fetchComments();
@@ -129,14 +213,76 @@ const submitComment = async () => {
 
 // 点赞文章
 const likeArticle = async () => {
+  // 检查用户是否已登录
+  if (!isLoggedIn.value) {
+    message.warning('请先登录后再点赞');
+    return;
+  }
+  
   try {
-    // 实际项目中应该调用API进行点赞
-    // 这里简单模拟点赞效果
-    article.value.likeCount += 1;
-    message.success('点赞成功');
+    if (articleLiked.value) {
+      // 如果已经点赞，则取消点赞
+      const result = await likeApi.unlikeArticle(articleId);
+      if (result && result.code === 200) {
+        articleLiked.value = false;
+        article.value.likeCount = Math.max(0, article.value.likeCount - 1);
+        message.success('已取消点赞');
+      } else {
+        message.error(result.message || '取消点赞失败');
+      }
+    } else {
+      // 如果未点赞，则进行点赞
+      const result = await likeApi.likeArticle(articleId);
+      if (result && result.code === 200) {
+        articleLiked.value = true;
+        article.value.likeCount += 1;
+        message.success('点赞成功');
+      } else {
+        message.error(result.message || '点赞失败');
+      }
+    }
   } catch (error) {
-    console.error('点赞失败:', error);
-    message.error('点赞失败，请稍后重试');
+    console.error('点赞操作失败:', error);
+    message.error('点赞操作失败，请稍后重试');
+  }
+};
+
+// 点赞评论
+const likeComment = async (comment) => {
+  // 检查用户是否已登录
+  if (!isLoggedIn.value) {
+    message.warning('请先登录后再点赞');
+    return;
+  }
+  
+  const commentId = comment.id;
+  const isLiked = commentLikedMap.value[commentId];
+  
+  try {
+    if (isLiked) {
+      // 如果已经点赞，则取消点赞
+      const result = await likeApi.unlikeComment(commentId);
+      if (result && result.code === 200) {
+        commentLikedMap.value[commentId] = false;
+        comment.likeCount = Math.max(0, comment.likeCount - 1);
+        message.success('已取消点赞');
+      } else {
+        message.error(result.message || '取消点赞失败');
+      }
+    } else {
+      // 如果未点赞，则进行点赞
+      const result = await likeApi.likeComment(commentId);
+      if (result && result.code === 200) {
+        commentLikedMap.value[commentId] = true;
+        comment.likeCount = (comment.likeCount || 0) + 1;
+        message.success('点赞成功');
+      } else {
+        message.error(result.message || '点赞失败');
+      }
+    }
+  } catch (error) {
+    console.error('评论点赞操作失败:', error);
+    message.error('评论点赞操作失败，请稍后重试');
   }
 };
 
@@ -145,16 +291,54 @@ const goToArticle = (id) => {
   router.push(`/article/${id}`);
 };
 
+// 返回首页
+const goToHome = () => {
+  router.push('/');
+};
+
 onMounted(() => {
   fetchArticleDetail();
   fetchComments();
   // 确保页面滚动到顶部
   window.scrollTo(0, 0);
 });
+
+// 监听路由参数变化，当文章ID变化时重新获取数据
+watch(() => route.params.id, (newId, oldId) => {
+  if (newId !== oldId) {
+    // 更新当前文章ID
+    articleId = newId;
+    // 重新获取文章详情和评论
+    fetchArticleDetail();
+    fetchComments();
+    // 确保页面滚动到顶部
+    window.scrollTo(0, 0);
+  }
+});
+
+// 监听用户登录状态变化，当用户登录状态变化时更新点赞状态
+watch(() => isLoggedIn.value, (newValue, oldValue) => {
+  if (newValue && !oldValue) {
+    // 用户登录后，获取点赞状态
+    fetchArticleLikeStatus();
+    fetchCommentLikeStatus();
+  } else if (!newValue && oldValue) {
+    // 用户登出后，重置点赞状态
+    articleLiked.value = false;
+    commentLikedMap.value = {};
+  }
+});
 </script>
 
 <template>
   <ReadingProgress />
+  
+  <!-- 返回首页按钮 -->
+  <div class="home-button-container">
+    <Button type="primary" @click="goToHome" class="home-button">
+      <HomeOutlined /> 返回首页
+    </Button>
+  </div>
   
   <!-- 文章头图区域 -->
   <div class="article-hero" v-if="article.id">
@@ -193,8 +377,15 @@ onMounted(() => {
           </div>
           
           <div class="article-actions">
-            <Button type="primary" @click="likeArticle">
-              <LikeOutlined /> 点赞 ({{ article.likeCount || 0 }})
+            <Button 
+              :type="articleLiked ? 'primary' : 'default'" 
+              @click="likeArticle"
+              class="like-button"
+              :class="{ 'liked': articleLiked }"
+            >
+              <LikeFilled v-if="articleLiked" /> 
+              <LikeOutlined v-else /> 
+              {{ articleLiked ? '已点赞' : '点赞' }} ({{ article.likeCount || 0 }})
             </Button>
           </div>
         </template>
@@ -208,24 +399,44 @@ onMounted(() => {
         
         <!-- 评论表单 -->
         <div class="comment-form">
-          <Form>
-            <Form.Item>
-              <Input.TextArea 
-                v-model:value="commentContent" 
-                :rows="4" 
-                placeholder="写下你的评论..."
-              />
-            </Form.Item>
-            <Form.Item>
-              <Button 
-                type="primary" 
-                :loading="submitting" 
-                @click="submitComment"
-              >
-                发表评论
-              </Button>
-            </Form.Item>
-          </Form>
+          <div class="comment-form-container" :class="{ 'not-logged-in': !isLoggedIn }">
+            <Form>
+              <Form.Item>
+                <Input.TextArea 
+                  v-model:value="commentContent" 
+                  :rows="4" 
+                  placeholder="写下你的评论..."
+                  :disabled="!isLoggedIn"
+                />
+              </Form.Item>
+              <Form.Item>
+                <Button 
+                  v-if="isLoggedIn"
+                  type="primary" 
+                  :loading="submitting" 
+                  @click="submitComment"
+                >
+                  发表评论
+                </Button>
+                <Button 
+                  v-else
+                  type="primary" 
+                  @click="goToLogin"
+                >
+                  <LoginOutlined /> 登录后评论
+                </Button>
+              </Form.Item>
+            </Form>
+            
+            <!-- 未登录遮罩层 -->
+            <div v-if="!isLoggedIn" class="login-overlay">
+              <div class="login-prompt">
+                <LoginOutlined />
+                <p>登录后才能发表评论</p>
+                <Button type="primary" @click="goToLogin">去登录</Button>
+              </div>
+            </div>
+          </div>
         </div>
         
         <Divider />
@@ -241,7 +452,11 @@ onMounted(() => {
                 :datetime="comment.createTime"
               >
                 <template #actions>
-                  <span><LikeOutlined /> {{ comment.likeCount || 0 }}</span>
+                  <span @click="likeComment(comment)" class="comment-like" :class="{ 'liked': commentLikedMap[comment.id] }">
+                    <LikeFilled v-if="commentLikedMap[comment.id]" /> 
+                    <LikeOutlined v-else /> 
+                    {{ comment.likeCount || 0 }}
+                  </span>
                   <span>回复</span>
                 </template>
                 
@@ -256,7 +471,11 @@ onMounted(() => {
                     :datetime="reply.createTime"
                   >
                     <template #actions>
-                      <span><LikeOutlined /> {{ reply.likeCount || 0 }}</span>
+                      <span @click="likeComment(reply)" class="comment-like" :class="{ 'liked': commentLikedMap[reply.id] }">
+                        <LikeFilled v-if="commentLikedMap[reply.id]" /> 
+                        <LikeOutlined v-else /> 
+                        {{ reply.likeCount || 0 }}
+                      </span>
                       <span>回复</span>
                     </template>
                   </Comment>
@@ -301,10 +520,15 @@ onMounted(() => {
         <template #title>相关文章</template>
         <div class="related-articles">
           <div v-if="relatedArticles.length > 0">
-            <div v-for="article in relatedArticles" :key="article.id" class="related-article-item" @click="goToArticle(article.id)">
+            <router-link 
+              v-for="article in relatedArticles" 
+              :key="article.id" 
+              :to="`/article/${article.id}`" 
+              class="related-article-item"
+            >
               <span class="related-article-title">{{ article.title }}</span>
               <span class="related-article-views"><EyeOutlined /> {{ article.viewCount || 0 }}</span>
-            </div>
+            </router-link>
           </div>
           <div v-else class="empty-related">
             <p>暂无相关文章</p>
@@ -317,6 +541,42 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* 点赞按钮样式 */
+.like-button.liked {
+  background-color: #1890ff;
+  border-color: #1890ff;
+  color: white;
+}
+
+.comment-like {
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.comment-like.liked {
+  color: #1890ff;
+}
+
+.home-button-container {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+}
+
+.home-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s;
+}
+
+.home-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
 .article-hero {
   position: relative;
   height: 400px;
@@ -485,6 +745,51 @@ onMounted(() => {
   background-color: #f9f9f9;
   padding: 16px;
   border-radius: 8px;
+}
+
+.comment-form-container {
+  position: relative;
+}
+
+.comment-form-container.not-logged-in {
+  opacity: 0.8;
+}
+
+.login-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+.comment-form-container.not-logged-in:hover .login-overlay {
+  display: flex;
+}
+
+.login-prompt {
+  text-align: center;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.login-prompt .anticon {
+  font-size: 24px;
+  color: #1890ff;
+  margin-bottom: 8px;
+}
+
+.login-prompt p {
+  margin-bottom: 16px;
+  color: #333;
 }
 
 .comment-item {

@@ -14,6 +14,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 /**
  * 文件上传控制器
  */
@@ -34,6 +36,7 @@ public class FileController {
      * @return 文件访问URL
      */
     @PostMapping("/upload")
+    @PreAuthorize("hasAuthority('file:upload')")
     public Result<String> uploadFile(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             return Result.error("上传文件不能为空");

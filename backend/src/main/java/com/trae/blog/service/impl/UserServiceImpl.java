@@ -6,8 +6,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.trae.blog.entity.User;
+import com.trae.blog.entity.UserRole;
 import com.trae.blog.mapper.UserMapper;
+import com.trae.blog.mapper.UserRoleMapper;
 import com.trae.blog.service.UserService;
+import com.trae.blog.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -16,8 +19,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 用户服务实现类
@@ -33,6 +39,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     @Autowired
     private HttpServletRequest request;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
+    
+    @Autowired
+    private UserRoleMapper userRoleMapper;
     
     @Value("${jwt.expiration}")
     private Long expiration;
@@ -62,11 +74,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return null;
         }
         
-        // 生成token
-        String token = UUID.randomUUID().toString().replace("-", "");
-        
-        // 将用户信息存入Redis，设置过期时间
-        redisTemplate.opsForValue().set("token:" + token, user, expiration, TimeUnit.SECONDS);
+        // 使用JWT工具类生成token
+        String token = jwtUtil.generateToken(user);
         
         return token;
     }
@@ -114,8 +123,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 提取token
         String token = authHeader.substring(tokenPrefix.length()).trim();
         
-        // 从Redis获取用户信息
-        return (User) redisTemplate.opsForValue().get("token:" + token);
+        try {
+            // 从token中获取用户名
+            String username = jwtUtil.getUsernameFromToken(token);
+            
+            // 根据用户名查询用户
+            return getOne(new LambdaQueryWrapper<User>()
+                    .eq(User::getUsername, username)
+                    .eq(User::getStatus, 1));
+        } catch (Exception e) {
+            return null;
+        }
     }
     
     /**
@@ -124,20 +142,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param page    页码
      * @param size    每页大小
      * @param keyword 关键词
+     * @param status  用户状态，null表示全部状态，1表示正常，0表示禁用
      * @return 用户分页列表
      */
     @Override
-    public IPage<User> getUserList(Integer page, Integer size, String keyword) {
+    public IPage<User> getUserList(Integer page, Integer size, String keyword, Integer status) {
         Page<User> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         
         // 关键词搜索
         if (StrUtil.isNotBlank(keyword)) {
-            queryWrapper.like(User::getUsername, keyword)
+            queryWrapper.and(wrapper -> wrapper.like(User::getUsername, keyword)
                     .or()
                     .like(User::getNickname, keyword)
                     .or()
-                    .like(User::getEmail, keyword);
+                    .like(User::getEmail, keyword));
+        }
+        
+        // 状态筛选
+        if (status != null) {
+            queryWrapper.eq(User::getStatus, status);
         }
         
         // 排序
@@ -206,5 +230,97 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         updateUser.setPassword(passwordEncoder.encode(newPassword));
         
         return updateById(updateUser);
+    }
+    
+    /**
+     * 获取用户的角色ID列表
+     *
+     * @param userId 用户ID
+     * @return 角色ID列表
+     */
+    @Override
+    public List<Long> getUserRoleIds(Long userId) {
+        LambdaQueryWrapper<UserRole> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(UserRole::getUserId, userId);
+        List<UserRole> userRoles = userRoleMapper.selectList(queryWrapper);
+        
+        return userRoles.stream()
+                .map(UserRole::getRoleId)
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * 分配用户角色
+     *
+     * @param userId  用户ID
+     * @param roleIds 角色ID列表
+     * @return 是否成功
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean assignRoles(Long userId, List<Long> roleIds) {
+        // 先删除原有的用户角色关系
+        LambdaQueryWrapper<UserRole> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(UserRole::getUserId, userId);
+        userRoleMapper.delete(queryWrapper);
+        
+        // 如果角色ID列表为空，则直接返回成功
+        if (roleIds == null || roleIds.isEmpty()) {
+            return true;
+        }
+        
+        // 批量添加新的用户角色关系
+        List<UserRole> userRoles = new ArrayList<>();
+        for (Long roleId : roleIds) {
+            UserRole userRole = new UserRole();
+            userRole.setUserId(userId);
+            userRole.setRoleId(roleId);
+            userRoles.add(userRole);
+        }
+        
+        // 批量插入
+        for (UserRole userRole : userRoles) {
+            userRoleMapper.insert(userRole);
+        }
+        
+        return true;
+    }
+    
+    /**
+     * 启用用户
+     *
+     * @param id 用户ID
+     * @return 是否成功
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean enableUser(Long id) {
+        User user = getById(id);
+        if (user == null) {
+            return false;
+        }
+        
+        // 设置用户状态为启用(1)
+        user.setStatus(1);
+        return updateById(user);
+    }
+    
+    /**
+     * 禁用用户
+     *
+     * @param id 用户ID
+     * @return 是否成功
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean disableUser(Long id) {
+        User user = getById(id);
+        if (user == null) {
+            return false;
+        }
+        
+        // 设置用户状态为禁用(0)
+        user.setStatus(0);
+        return updateById(user);
     }
 }

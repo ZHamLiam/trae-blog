@@ -5,12 +5,14 @@ import com.trae.blog.common.Result;
 import com.trae.blog.entity.User;
 import com.trae.blog.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -83,11 +85,13 @@ public class UserController {
      * @return 用户分页列表
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('user:view')")
     public Result<IPage<User>> getUserList(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) String keyword) {
-        IPage<User> userList = userService.getUserList(page, size, keyword);
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer status) {
+        IPage<User> userList = userService.getUserList(page, size, keyword, status);
         return Result.success(userList);
     }
 
@@ -98,6 +102,7 @@ public class UserController {
      * @return 用户详情
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('user:view')")
     public Result<User> getUserById(@PathVariable Long id) {
         User user = userService.getById(id);
         if (user == null) {
@@ -116,6 +121,7 @@ public class UserController {
      * @return 更新结果
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('user:update')")
     public Result<Boolean> updateUser(
             @PathVariable Long id,
             @RequestBody User user) {
@@ -135,6 +141,7 @@ public class UserController {
      * @return 删除结果
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('user:delete')")
     public Result<Boolean> deleteUser(@PathVariable Long id) {
         boolean result = userService.deleteUser(id);
         if (result) {
@@ -212,6 +219,76 @@ public class UserController {
         } catch (Exception e) {
             e.printStackTrace();
             return Result.error("头像上传失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 获取用户的角色ID列表
+     *
+     * @param id 用户ID
+     * @return 角色ID列表
+     */
+    @GetMapping("/{id}/roles")
+    public Result<List<Long>> getUserRoleIds(@PathVariable Long id) {
+        List<Long> roleIds = userService.getUserRoleIds(id);
+        return Result.success(roleIds);
+    }
+    
+    /**
+     * 分配用户角色
+     *
+     * @param id     用户ID
+     * @param params 包含角色ID列表的参数
+     * @return 分配结果
+     */
+    @PostMapping("/{id}/roles")
+    public Result<Boolean> assignRoles(
+            @PathVariable Long id,
+            @RequestBody Map<String, List<Long>> params) {
+        List<Long> roleIds = params.get("roleIds");
+        if (roleIds == null) {
+            return Result.error("角色ID列表不能为空");
+        }
+        
+        boolean result = userService.assignRoles(id, roleIds);
+        if (result) {
+            return Result.success(true);
+        } else {
+            return Result.error("分配用户角色失败");
+        }
+    }
+    
+    /**
+     * 启用用户
+     *
+     * @param id 用户ID
+     * @return 启用结果
+     */
+    @PutMapping("/{id}/enable")
+    @PreAuthorize("hasAuthority('user:update')")
+    public Result<Boolean> enableUser(@PathVariable Long id) {
+        boolean result = userService.enableUser(id);
+        if (result) {
+            return Result.success("用户启用成功", true);
+        } else {
+            return Result.error("用户启用失败");
+        }
+    }
+    
+    /**
+     * 禁用用户
+     *
+     * @param id 用户ID
+     * @return 禁用结果
+     */
+    @PutMapping("/{id}/disable")
+    @PreAuthorize("hasAuthority('user:update')")
+    public Result<Boolean> disableUser(@PathVariable Long id) {
+        boolean result = userService.disableUser(id);
+        if (result) {
+            return Result.success("用户禁用成功", true);
+        } else {
+            return Result.error("用户禁用失败");
         }
     }
 }

@@ -21,7 +21,7 @@ const UserManage = () => import('../views/admin/user/UserManage.vue')
 const ProfileCenter = () => import('../views/admin/profile/ProfileCenter.vue')
 const RoleManage = () => import('../views/admin/role/RoleManage.vue')
 const PermissionManage = () => import('../views/admin/permission/PermissionManage.vue')
-
+// const SiteConfigManage= () => import('@/views/admin/config/SiteConfigManage.vue')
 // 认证页面
 const Login = () => import('../views/auth/Login.vue')
 const Register = () => import('../views/auth/Register.vue')
@@ -147,6 +147,12 @@ const routes = [
         component: PermissionManage,
         meta: { title: '权限管理' }
       }
+      // {
+      //   path: 'config',
+      //   name: 'SiteConfigManage',
+      //   component: SiteConfigManage,
+      //   meta: { title: '网站配置', icon: 'setting' }
+      // }
     ]
   }
 ]

@@ -78,3 +78,13 @@ file:
   upload:
     path: ${user.dir}/uploads
     url: /api/uploads
+
+# 阿里云OSS配置
+aliyun:
+  oss:
+    endpoint: # 阿里云OSS域名，例如：oss-cn-beijing.aliyuncs.com
+    accessKeyId: # 阿里云OSS访问密钥ID
+    accessKeySecret: # 阿里云OSS访问密钥密码
+    bucketName: # 阿里云OSS存储桶名称
+    dir: blog/images # 阿里云OSS文件存储目录
+    url: # 阿里云OSS访问URL，例如：https://your-bucket.oss-cn-beijing.aliyuncs.com

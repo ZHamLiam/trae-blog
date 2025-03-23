@@ -111,4 +111,22 @@ public class Article {
      */
     @TableField(exist = false)
     private List<Long> tagIds;
+    
+    /**
+     * 作者名称（非数据库字段）
+     */
+    @TableField(exist = false)
+    private String author;
+    
+    /**
+     * 作者头像（非数据库字段）
+     */
+    @TableField(exist = false)
+    private String authorAvatar;
+    
+    /**
+     * 作者简介（非数据库字段）
+     */
+    @TableField(exist = false)
+    private String authorBio;
 }

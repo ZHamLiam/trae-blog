@@ -143,10 +143,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param size    每页大小
      * @param keyword 关键词
      * @param status  用户状态，null表示全部状态，1表示正常，0表示禁用
+     * @param sortField 排序字段
+     * @param sortOrder 排序方式：ascend-升序，descend-降序
      * @return 用户分页列表
      */
     @Override
-    public IPage<User> getUserList(Integer page, Integer size, String keyword, Integer status) {
+    public IPage<User> getUserList(Integer page, Integer size, String keyword, Integer status, String sortField, String sortOrder) {
         Page<User> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         
@@ -164,8 +166,47 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             queryWrapper.eq(User::getStatus, status);
         }
         
-        // 排序
-        queryWrapper.orderByDesc(User::getCreateTime);
+        // 处理排序
+        if (StrUtil.isNotBlank(sortField)) {
+            // 根据前端传入的排序字段和排序方式进行排序
+            switch (sortField) {
+                case "createTime":
+                    if ("ascend".equals(sortOrder)) {
+                        queryWrapper.orderByAsc(User::getCreateTime);
+                    } else {
+                        queryWrapper.orderByDesc(User::getCreateTime);
+                    }
+                    break;
+                case "username":
+                    if ("ascend".equals(sortOrder)) {
+                        queryWrapper.orderByAsc(User::getUsername);
+                    } else {
+                        queryWrapper.orderByDesc(User::getUsername);
+                    }
+                    break;
+                case "nickname":
+                    if ("ascend".equals(sortOrder)) {
+                        queryWrapper.orderByAsc(User::getNickname);
+                    } else {
+                        queryWrapper.orderByDesc(User::getNickname);
+                    }
+                    break;
+                case "email":
+                    if ("ascend".equals(sortOrder)) {
+                        queryWrapper.orderByAsc(User::getEmail);
+                    } else {
+                        queryWrapper.orderByDesc(User::getEmail);
+                    }
+                    break;
+                default:
+                    // 默认按创建时间降序排序
+                    queryWrapper.orderByDesc(User::getCreateTime);
+                    break;
+            }
+        } else {
+            // 没有指定排序字段，默认按创建时间降序排序
+            queryWrapper.orderByDesc(User::getCreateTime);
+        }
         
         return page(pageParam, queryWrapper);
     }

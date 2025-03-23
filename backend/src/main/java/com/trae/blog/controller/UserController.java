@@ -90,8 +90,10 @@ public class UserController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Integer status) {
-        IPage<User> userList = userService.getUserList(page, size, keyword, status);
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String sortField,
+            @RequestParam(required = false) String sortOrder) {
+        IPage<User> userList = userService.getUserList(page, size, keyword, status, sortField, sortOrder);
         return Result.success(userList);
     }
 

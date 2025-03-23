@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, h } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { Card, Avatar, Tag, Divider, Button, Comment, Form, Input, message } from 'ant-design-vue';
+import { Card, Tag, Divider, Button, Comment, Form, Input, message } from 'ant-design-vue';
 import { LikeOutlined, LikeFilled, MessageOutlined, EyeOutlined, ClockCircleOutlined, UserOutlined, LoginOutlined, HomeOutlined } from '@ant-design/icons-vue';
+import UserAvatar from '@/components/UserAvatar.vue';
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
 import articleApi from '@/api/article';
@@ -351,7 +352,7 @@ watch(() => isLoggedIn.value, (newValue, oldValue) => {
       <h1 class="article-hero-title">{{ article.title }}</h1>
       <div class="article-hero-meta">
         <div class="author-info">
-          <Avatar :src="article.authorAvatar || 'https://joeschmoe.io/api/v1/random'" :size="40" />
+          <UserAvatar :src="article.authorAvatar" :username="article.author || '匿名'" :size="40" />
           <div class="publish-time"><ClockCircleOutlined /> {{ $formatDate(article.createTime) }}</div>
         </div>
         <div class="article-stats">
@@ -447,7 +448,7 @@ watch(() => isLoggedIn.value, (newValue, oldValue) => {
             <div v-for="comment in comments" :key="comment.id" class="comment-item">
               <Comment
                 :author="comment.username"
-                :avatar="comment.userAvatar || 'https://joeschmoe.io/api/v1/random'"
+                :avatar="h(UserAvatar, { src: comment.userAvatar, username: comment.userName, size: 'default' })"
                 :content="comment.content"
                 :datetime="comment.createTime"
               >
@@ -466,7 +467,7 @@ watch(() => isLoggedIn.value, (newValue, oldValue) => {
                     v-for="reply in comment.children"
                     :key="reply.id"
                     :author="reply.username"
-                    :avatar="reply.userAvatar || 'https://joeschmoe.io/api/v1/random'"
+                    :avatar="h(UserAvatar, { src: reply.userAvatar, username: reply.username, size: 'default' })"
                     :content="reply.content"
                     :datetime="reply.createTime"
                   >
@@ -496,7 +497,7 @@ watch(() => isLoggedIn.value, (newValue, oldValue) => {
       <Card class="sidebar-card author-card" v-if="article.id">
         <template #title>作者信息</template>
         <div class="author-card-content">
-          <Avatar :src="article.authorAvatar || 'https://joeschmoe.io/api/v1/random'" :size="64" />
+          <UserAvatar :src="article.authorAvatar" :username="article.author || '匿名'" :size="64" />
           <div class="author-name">{{ article.author || '匿名' }}</div>
           <div class="author-bio">{{ article.authorBio || '这个人很懒，什么都没有留下...' }}</div>
           <div class="author-stats">

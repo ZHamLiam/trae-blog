@@ -1,13 +1,16 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { Card, Row, Col, Pagination, Tag, Divider, message } from 'ant-design-vue';
+import { Card, Row, Col, Pagination, Tag, Divider, Input, message } from 'ant-design-vue';
 import BackToTop from '@/components/BackToTop.vue';
 import articleApi from '@/api/article';
 import categoryApi from '@/api/category';
 import tagApi from '@/api/tag';
 
 const router = useRouter();
+
+// 搜索关键词
+const searchKeyword = ref('');
 
 // 文章列表数据
 const articles = ref([]);
@@ -173,6 +176,18 @@ const goToTag = (id) => {
   router.push(`/tag/${id}`);
 };
 
+// 处理搜索
+const handleSearch = (value) => {
+  if (!value.trim()) {
+    message.info('请输入搜索关键词');
+    return;
+  }
+  router.push({
+    path: '/search',
+    query: { keyword: value }
+  });
+};
+
 // 处理分页变化
 const handlePageChange = (page) => {
   pagination.value.current = page;
@@ -243,6 +258,19 @@ const handlePageChange = (page) => {
         <!-- 侧边栏 -->
         <Col :span="8">
           <div class="sidebar">
+            <!-- 搜索框 -->
+            <Card class="sidebar-card">
+              <template #title>搜索文章</template>
+              <div class="search-box">
+                <Input.Search
+                  v-model:value="searchKeyword"
+                  placeholder="输入关键词搜索文章..."
+                  enter-button
+                  @search="handleSearch"
+                />
+              </div>
+            </Card>
+            
             <!-- 热门文章 -->
             <Card class="sidebar-card">
               <template #title>热门文章</template>
@@ -412,6 +440,10 @@ const handlePageChange = (page) => {
 
 .sidebar-card {
   margin-bottom: 20px;
+}
+
+.search-box {
+  margin-bottom: 10px;
 }
 
 .hot-articles {

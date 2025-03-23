@@ -2,6 +2,7 @@
 import { ref, reactive, onMounted, h, getCurrentInstance } from 'vue';
 import { Table, Card, Button, Space, Popconfirm, message, Tag, Modal, Checkbox } from 'ant-design-vue';
 import { EditOutlined, DeleteOutlined, LockOutlined, UnlockOutlined, TeamOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue';
+import UserAvatar from '../../../components/UserAvatar.vue';
 import userApi from '../../../api/user';
 import roleApi from '@/api/role';
 
@@ -31,6 +32,16 @@ const columns = [
     dataIndex: 'username',
     key: 'username',
     ellipsis: true,
+    customRender: ({ text, record }) => {
+      return h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, [
+        h(UserAvatar, {
+          username: text,
+          src: record.avatar,
+          size: 'small'
+        }),
+        h('span', {}, text)
+      ]);
+    }
   },
   {
     title: '昵称',

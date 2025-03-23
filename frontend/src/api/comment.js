@@ -31,9 +31,8 @@ export default {
   // 更新评论状态（审核通过/拒绝）
   updateCommentStatus(id, status) {
     return request({
-      url: `/comments/${id}/status`,
-      method: 'put',
-      data: { status }
+      url: `/comments/${id}/status/${status}`,
+      method: 'put'
     });
   },
   

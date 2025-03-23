@@ -166,4 +166,10 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         
         return tags;
     }
+
+    @Override
+    public IPage<Tag> getTagList(Integer page, Integer size, String keyword, String sortField, String sortOrder) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getTagList'");
+    }
 }

@@ -1,8 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { Card, Row, Col, Pagination, Tag, Input, Button } from 'ant-design-vue';
+import { Card, Row, Col, Pagination, Tag, Input, Button, message } from 'ant-design-vue';
 import { SearchOutlined } from '@ant-design/icons-vue';
+import articleApi from '@/api/article';
 
 const route = useRoute();
 const router = useRouter();
@@ -29,25 +30,41 @@ onMounted(() => {
 });
 
 // 执行搜索
-const doSearch = () => {
+const doSearch = async () => {
   if (!keyword.value.trim()) {
     return;
   }
   
   searching.value = true;
   
-  // 这里将来会通过API获取搜索结果
-  console.log('搜索关键词:', keyword.value);
-  
-  // 模拟搜索结果
-  setTimeout(() => {
+  try {
+    // 通过API获取搜索结果
+    const response = await articleApi.getArticleList({
+      page: pagination.value.current,
+      size: pagination.value.pageSize,
+      keyword: keyword.value,
+      status: 1 // 只获取已发布的文章
+    });
+    
+    if (response.code === 200) {
+      searchResults.value = response.data.records || [];
+      pagination.value.total = response.data.total || 0;
+    } else {
+      message.error(response.message || '搜索失败');
+      searchResults.value = [];
+      pagination.value.total = 0;
+    }
+  } catch (error) {
+    console.error('搜索失败:', error);
+    message.error('搜索失败，请稍后再试');
     searchResults.value = [];
     pagination.value.total = 0;
+  } finally {
     searching.value = false;
     
     // 更新URL参数，但不重新加载页面
     router.replace({ query: { keyword: keyword.value } });
-  }, 500);
+  }
 };
 
 // 处理分页变化
@@ -84,7 +101,25 @@ const goToArticle = (id) => {
         <h2 class="section-title" v-if="keyword">搜索结果: {{ keyword }}</h2>
         
         <div v-if="searchResults.length > 0">
-          <!-- 搜索结果列表将在这里显示 -->
+          <Card v-for="article in searchResults" :key="article.id" class="article-card" hoverable @click="goToArticle(article.id)">
+            <div class="article-cover" v-if="article.coverImage">
+              <img :src="article.coverImage" :alt="article.title" />
+            </div>
+            <div class="article-content">
+              <h3 class="article-title">{{ article.title }}</h3>
+              <div class="article-meta">
+                <span>{{ article.author }}</span>
+                <span>{{ $formatDate(article.createTime) }}</span>
+                <span>分类: {{ article.categoryName }}</span>
+                <span>浏览: {{ article.viewCount }}</span>
+                <span>评论: {{ article.commentCount }}</span>
+              </div>
+              <p class="article-summary">{{ article.summary }}</p>
+              <div class="article-tags">
+                <Tag v-for="tag in article.tags" :key="tag" color="blue">{{ tag }}</Tag>
+              </div>
+            </div>
+          </Card>
         </div>
         <div v-else-if="keyword && !searching" class="empty-list">
           <p>未找到相关文章</p>
@@ -145,5 +180,50 @@ const goToArticle = (id) => {
 .pagination {
   margin-top: 30px;
   text-align: center;
+}
+
+.article-card {
+  margin-bottom: 20px;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.article-card:hover {
+  transform: translateY(-5px);
+}
+
+.article-cover img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.article-title {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.article-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.article-summary {
+  color: #666;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.article-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 </style>

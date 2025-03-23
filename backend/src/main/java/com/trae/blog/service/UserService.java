@@ -38,13 +38,15 @@ public interface UserService extends IService<User> {
     /**
      * 分页获取用户列表
      *
-     * @param page 页码
-     * @param size 每页大小
+     * @param page    页码
+     * @param size    每页大小
      * @param keyword 关键词
-     * @param status 用户状态，null表示全部状态，1表示正常，0表示禁用
+     * @param status  用户状态，null表示全部状态，1表示正常，0表示禁用
+     * @param sortField 排序字段
+     * @param sortOrder 排序方式：ascend-升序，descend-降序
      * @return 用户分页列表
      */
-    IPage<User> getUserList(Integer page, Integer size, String keyword, Integer status);
+    IPage<User> getUserList(Integer page, Integer size, String keyword, Integer status, String sortField, String sortOrder);
     
     /**
      * 更新用户信息

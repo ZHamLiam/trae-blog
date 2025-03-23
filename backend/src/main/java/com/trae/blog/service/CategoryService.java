@@ -22,6 +22,18 @@ public interface CategoryService extends IService<Category> {
     IPage<Category> getCategoryList(Integer page, Integer size, String keyword);
     
     /**
+     * 分页获取分类列表（带排序功能）
+     *
+     * @param page 页码
+     * @param size 每页大小
+     * @param keyword 关键词
+     * @param sortField 排序字段
+     * @param sortOrder 排序方式：ascend-升序，descend-降序
+     * @return 分类分页列表
+     */
+    IPage<Category> getCategoryList(Integer page, Integer size, String keyword, String sortField, String sortOrder);
+    
+    /**
      * 获取分类详情
      *
      * @param id 分类ID

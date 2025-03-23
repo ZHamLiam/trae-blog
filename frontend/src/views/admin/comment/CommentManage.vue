@@ -2,6 +2,7 @@
 import { ref, onMounted, h, getCurrentInstance } from 'vue';
 import { Table, Card, Button, Space, Popconfirm, message, Tag, Form, Input, Select } from 'ant-design-vue';
 import { DeleteOutlined, CheckOutlined, StopOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue';
+import UserAvatar from '../../../components/UserAvatar.vue';
 import commentApi from '../../../api/comment';
 
 // 查询条件
@@ -87,7 +88,17 @@ const columns = [
   {
     title: '用户',
     dataIndex: 'userName',
-    key: 'userName'
+    key: 'userName',
+    customRender: ({ text, record }) => {
+      return h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, [
+        h(UserAvatar, {
+          username: text,
+          src: record.userAvatar,
+          size: 'small'
+        }),
+        h('span', {}, text)
+      ]);
+    }
   },
   {
     title: '状态',
@@ -95,8 +106,8 @@ const columns = [
     key: 'status',
     customRender: ({ text }) => {
       return h(Tag, {
-        color: text === 'approved' ? 'green' : text === 'pending' ? 'orange' : 'red'
-      }, text === 'approved' ? '已审核' : text === 'pending' ? '待审核' : '已拒绝');
+        color: text === 1 ? 'green' : text === 0 ? 'orange' : 'red'
+      }, text === 1 ? '已审核' : text === 0 ? '待审核' : '已拒绝');
     }
   },
   {
@@ -115,7 +126,7 @@ const columns = [
     customRender: ({ record }) => {
       const buttons = [];
       
-      if (record.status !== 'approved') {
+      if (record.status !== 1 && record.status !== 'approved') {
         buttons.push(
           h(Button, {
             type: 'primary',
@@ -123,12 +134,12 @@ const columns = [
             onClick: () => approveComment(record.id)
           }, [
             h(CheckOutlined),
-            ' 通过'
+            ' 发布'
           ])
         );
       }
       
-      if (record.status !== 'rejected') {
+      if (record.status !== 2 && record.status !== 'rejected') {
         buttons.push(
           h(Button, {
             type: 'primary',
@@ -165,8 +176,8 @@ const fetchComments = async (params = {}) => {
       size: params.pageSize || pagination.value.pageSize,
       ...params
     };
-    delete queryParams.current; // 删除current参数
-    delete queryParams.pageSize; // 删除pageSize参数，使用size
+    
+    
     
     // 调用API获取评论列表
     const result = await commentApi.getCommentList(queryParams);
@@ -180,6 +191,7 @@ const fetchComments = async (params = {}) => {
       comments.value = Array.isArray(result.data.records) ? result.data.records : 
                       (Array.isArray(result.data) ? result.data : []);
       pagination.value.total = result.data.total || result.total || 0;
+      pagination.value.current=result.data.current || result.current || 1;
     } else {
       // 直接尝试使用返回的数据
       comments.value = Array.isArray(result.data) ? result.data : 
@@ -211,12 +223,12 @@ const handleTableChange = (pag, filters, sorter) => {
 const approveComment = async (id) => {
   try {
     // 调用API通过评论
-    await commentApi.updateCommentStatus(id, 'approved');
-    message.success('评论已通过审核');
+    await commentApi.updateCommentStatus(id, 1);
+    message.success('评论已发布');
     fetchComments();
   } catch (error) {
-    console.error('审核评论失败:', error);
-    message.error('审核评论失败，请稍后重试');
+    console.error('发布评论失败:', error);
+    message.error('发布评论失败，请稍后重试');
   }
 };
 
@@ -224,7 +236,7 @@ const approveComment = async (id) => {
 const rejectComment = async (id) => {
   try {
     // 调用API拒绝评论
-    await commentApi.updateCommentStatus(id, 'rejected');
+    await commentApi.updateCommentStatus(id, 2);
     message.success('评论已被拒绝');
     fetchComments();
   } catch (error) {
@@ -268,9 +280,9 @@ const deleteComment = async (id) => {
             allowClear
             style="width: 200px"
           >
-            <Select.Option value="approved">已审核</Select.Option>
-            <Select.Option value="pending">待审核</Select.Option>
-            <Select.Option value="rejected">已拒绝</Select.Option>
+            <Select.Option value="1">已发布</Select.Option>
+            <Select.Option value="0">待审核</Select.Option>
+            <Select.Option value="2">已拒绝</Select.Option>
           </Select>
         </Form.Item>
         

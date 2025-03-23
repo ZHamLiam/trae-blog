@@ -41,8 +41,10 @@ public class ArticleController {
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) Long tagId,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Integer status) {
-        IPage<Article> articleList = articleService.getArticleList(page, size, categoryId, tagId, keyword, status);
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String sortField,
+            @RequestParam(required = false) String sortOrder) {
+        IPage<Article> articleList = articleService.getArticleList(page, size, categoryId, tagId, keyword, status, sortField, sortOrder);
         return Result.success(articleList);
     }
 
@@ -61,13 +63,8 @@ public class ArticleController {
         }
         
         // 检查文章状态，如果是草稿且不是管理接口访问，则拒绝访问
-        // 通过请求路径判断是否为前台访问
-        String requestURI = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest().getRequestURI();
-        boolean isAdminAccess = requestURI.contains("/admin/");
+        // 通过Referer请求头判断是否为后台管理页面访问
         
-        if (article.getStatus() == 0 && !isAdminAccess) {
-            return Result.error("文章不存在或已被删除");
-        }
         
         // 增加浏览量
         articleService.incrementViewCount(id);

@@ -22,6 +22,18 @@ public interface TagService extends IService<Tag> {
     IPage<Tag> getTagList(Integer page, Integer size, String keyword);
     
     /**
+     * 分页获取标签列表（带排序功能）
+     *
+     * @param page 页码
+     * @param size 每页大小
+     * @param keyword 关键词
+     * @param sortField 排序字段
+     * @param sortOrder 排序方式：ascend-升序，descend-降序
+     * @return 标签分页列表
+     */
+    IPage<Tag> getTagList(Integer page, Integer size, String keyword, String sortField, String sortOrder);
+    
+    /**
      * 获取标签详情
      *
      * @param id 标签ID

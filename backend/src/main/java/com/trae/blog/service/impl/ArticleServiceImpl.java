@@ -58,7 +58,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
      */
     
     @Override
-    public IPage<Article> getArticleList(Integer page, Integer size, Long categoryId, Long tagId, String keyword, Integer status) {
+    public IPage<Article> getArticleList(Integer page, Integer size, Long categoryId, Long tagId, String keyword, Integer status, String sortField, String sortOrder) {
         // MyBatis-Plus的Page是从1开始的，与前端传入的page一致，不需要减1
         Page<Article> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
@@ -102,9 +102,44 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                     .like(Article::getSummary, keyword);
         }
         
-        // 排序：先按置顶排序，再按创建时间排序
-        queryWrapper.orderByDesc(Article::getIsTop)
-                .orderByDesc(Article::getCreateTime);
+        // 处理排序
+        // 默认排序：先按置顶排序
+        queryWrapper.orderByDesc(Article::getIsTop);
+        
+        // 如果有指定排序字段和排序方式，则按指定字段排序
+        if (StrUtil.isNotBlank(sortField)) {
+            // 根据前端传入的排序字段和排序方式进行排序
+            switch (sortField) {
+                case "viewCount":
+                    if ("ascend".equals(sortOrder)) {
+                        queryWrapper.orderByAsc(Article::getViewCount);
+                    } else {
+                        queryWrapper.orderByDesc(Article::getViewCount);
+                    }
+                    break;
+                case "commentCount":
+                    if ("ascend".equals(sortOrder)) {
+                        queryWrapper.orderByAsc(Article::getCommentCount);
+                    } else {
+                        queryWrapper.orderByDesc(Article::getCommentCount);
+                    }
+                    break;
+                case "createTime":
+                    if ("ascend".equals(sortOrder)) {
+                        queryWrapper.orderByAsc(Article::getCreateTime);
+                    } else {
+                        queryWrapper.orderByDesc(Article::getCreateTime);
+                    }
+                    break;
+                default:
+                    // 默认按创建时间降序排序
+                    queryWrapper.orderByDesc(Article::getCreateTime);
+                    break;
+            }
+        } else {
+            // 没有指定排序字段，默认按创建时间降序排序
+            queryWrapper.orderByDesc(Article::getCreateTime);
+        }
         
         // 获取分页数据
         IPage<Article> articlePage = page(pageParam, queryWrapper);
@@ -145,7 +180,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
      */
     @Override
     public IPage<Article> getArticleList(Integer page, Integer size, Long categoryId, Long tagId, String keyword) {
-        return getArticleList(page, size, categoryId, tagId, keyword, null);
+        return getArticleList(page, size, categoryId, tagId, keyword, null, null, null);
     }
     
     /**
@@ -177,6 +212,19 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             if (article != null) {
                 // 存入缓存，设置过期时间为1小时
                 redisTemplate.opsForValue().set("article:" + id, article, 1, TimeUnit.HOURS);
+            }
+        }
+        
+        // 如果文章存在，获取作者信息
+        if (article != null && article.getAuthorId() != null) {
+            // 获取作者信息
+            User author = userService.getById(article.getAuthorId());
+            if (author != null) {
+                // 设置作者名称（优先使用昵称，如果没有则使用用户名）
+                article.setAuthor(author.getNickname() != null ? author.getNickname() : author.getUsername());
+                // 设置作者头像
+                article.setAuthorAvatar(author.getAvatar());
+                // 可以添加更多作者相关信息
             }
         }
         

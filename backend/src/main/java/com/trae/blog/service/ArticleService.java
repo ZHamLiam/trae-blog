@@ -32,9 +32,11 @@ public interface ArticleService extends IService<Article> {
      * @param tagId 标签ID
      * @param keyword 关键词
      * @param status 文章状态：0-草稿，1-已发布
+     * @param sortField 排序字段
+     * @param sortOrder 排序方式：ascend-升序，descend-降序
      * @return 文章分页列表
      */
-    IPage<Article> getArticleList(Integer page, Integer size, Long categoryId, Long tagId, String keyword, Integer status);
+    IPage<Article> getArticleList(Integer page, Integer size, Long categoryId, Long tagId, String keyword, Integer status, String sortField, String sortOrder);
     
     /**
      * 获取文章详情

@@ -13,6 +13,11 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      '/api/uploads': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        // 不重写路径，保留/api/uploads前缀
+      },
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,

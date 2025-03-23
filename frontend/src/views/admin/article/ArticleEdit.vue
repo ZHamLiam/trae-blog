@@ -6,8 +6,7 @@ import { PlusOutlined, UploadOutlined } from '@ant-design/icons-vue';
 import articleApi from '../../../api/article';
 import categoryApi from '../../../api/category';
 import tagApi from '../../../api/tag';
-import { MdEditor } from 'md-editor-v3';
-import 'md-editor-v3/lib/style.css';
+import MdEditorWithUpload from '../../../components/MdEditorWithUpload.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -157,7 +156,7 @@ const goBack = () => {
         </Form.Item>
         
         <Form.Item label="文章内容" name="content" required>
-          <MdEditor
+          <MdEditorWithUpload
             v-model="formState.content"
             height="500px"
             :toolbars="[

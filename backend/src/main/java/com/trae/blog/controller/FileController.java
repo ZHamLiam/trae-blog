@@ -1,6 +1,9 @@
 package com.trae.blog.controller;
 
 import com.trae.blog.common.Result;
+import com.trae.blog.config.OSSConfig;
+import com.trae.blog.util.OSSUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +31,9 @@ public class FileController {
 
     @Value("${file.upload.url}")
     private String uploadUrl;
+    
+    @Autowired
+    private OSSConfig ossConfig;
 
     /**
      * 上传文件
@@ -64,6 +70,29 @@ public class FileController {
             file.transferTo(targetFile);
             // 返回文件访问URL
             String fileUrl = uploadUrl + "/" + dateDir + "/" + fileName;
+            return Result.success("上传成功", fileUrl);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Result.error("文件上传失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 上传文件到阿里云OSS
+     *
+     * @param file 文件
+     * @return 文件访问URL
+     */
+    @PostMapping("/upload/oss")
+    @PreAuthorize("hasAuthority('file:upload')")
+    public Result<String> uploadFileToOSS(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return Result.error("上传文件不能为空");
+        }
+        
+        try {
+            // 上传文件到OSS
+            String fileUrl = OSSUtil.uploadFile(file, ossConfig);
             return Result.success("上传成功", fileUrl);
         } catch (IOException e) {
             e.printStackTrace();

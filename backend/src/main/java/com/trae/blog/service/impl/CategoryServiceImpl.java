@@ -28,13 +28,15 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
     /**
      * 分页获取分类列表
      *
-     * @param page    页码
-     * @param size    每页大小
-     * @param keyword 关键词
+     * @param page      页码
+     * @param size      每页大小
+     * @param keyword   关键词
+     * @param sortField 排序字段
+     * @param sortOrder 排序方式：ascend-升序，descend-降序
      * @return 分类分页列表
      */
     @Override
-    public IPage<Category> getCategoryList(Integer page, Integer size, String keyword) {
+    public IPage<Category> getCategoryList(Integer page, Integer size, String keyword, String sortField, String sortOrder) {
         Page<Category> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<Category> queryWrapper = new LambdaQueryWrapper<>();
         
@@ -45,8 +47,40 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
                     .like(Category::getDescription, keyword);
         }
         
-        // 排序
-        queryWrapper.orderByDesc(Category::getSort);
+        // 处理排序
+        if (StrUtil.isNotBlank(sortField)) {
+            // 根据前端传入的排序字段和排序方式进行排序
+            switch (sortField) {
+                case "name":
+                    if ("ascend".equals(sortOrder)) {
+                        queryWrapper.orderByAsc(Category::getName);
+                    } else {
+                        queryWrapper.orderByDesc(Category::getName);
+                    }
+                    break;
+                case "sort":
+                    if ("ascend".equals(sortOrder)) {
+                        queryWrapper.orderByAsc(Category::getSort);
+                    } else {
+                        queryWrapper.orderByDesc(Category::getSort);
+                    }
+                    break;
+                case "createTime":
+                    if ("ascend".equals(sortOrder)) {
+                        queryWrapper.orderByAsc(Category::getCreateTime);
+                    } else {
+                        queryWrapper.orderByDesc(Category::getCreateTime);
+                    }
+                    break;
+                default:
+                    // 默认按排序值降序排列
+                    queryWrapper.orderByDesc(Category::getSort);
+                    break;
+            }
+        } else {
+            // 没有指定排序字段，默认按排序值降序排列
+            queryWrapper.orderByDesc(Category::getSort);
+        }
         
         IPage<Category> categoryPage = page(pageParam, queryWrapper);
         
@@ -59,6 +93,14 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
         }
         
         return categoryPage;
+    }
+    
+    /**
+     * 分页获取分类列表（兼容旧接口）
+     */
+    @Override
+    public IPage<Category> getCategoryList(Integer page, Integer size, String keyword) {
+        return getCategoryList(page, size, keyword, null, null);
     }
     
     /**
